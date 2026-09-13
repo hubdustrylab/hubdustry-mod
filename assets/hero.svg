@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="260" viewBox="0 0 960 260" role="img" aria-labelledby="title desc">
+  <title id="title">Hubdustry</title>
+  <desc id="desc">A community hub for Mindustry. Play, connect, and explore together.</desc>
+  <defs>
+    <pattern id="grid" width="28" height="28" patternUnits="userSpaceOnUse">
+      <path d="M28 0H0V28" fill="none" stroke="#24272f" stroke-width="1"/>
+    </pattern>
+    <linearGradient id="fade" x1="0" x2="1">
+      <stop stop-color="#17191f"/>
+      <stop offset="1" stop-color="#17191f" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <path d="M18 1H942L959 18V242L942 259H18L1 242V18Z" fill="#17191f" stroke="#343842" stroke-width="2"/>
+  <path d="M550 2H942L958 18V242L942 258H550Z" fill="url(#grid)"/>
+  <path d="M550 2H850V258H550Z" fill="url(#fade)"/>
+  <path d="M26 1H242L232 5H22Z" fill="#ffd37f"/>
+  <text x="56" y="151" fill="#f4f1e9" font-family="Segoe UI,Arial,sans-serif" font-size="64" font-weight="700" letter-spacing="-2">Hubdustry</text>
+  <path d="M59 181H97" stroke="#ffd37f" stroke-width="3"/>
+  <g fill="none" stroke="#48443b" stroke-width="2">
+    <path d="M742 130L680 62M742 130L846 86M742 130L827 203M742 130L664 193"/>
+    <path d="M698 45H768L857 136V174" stroke="#30343d" stroke-dasharray="4 8"/>
+    <path d="M632 112V147L691 211H753" stroke="#30343d" stroke-dasharray="4 8"/>
+  </g>
+  <g fill="#20242b" stroke="#51565f" stroke-width="2">
+    <path d="M670 43H690L699 52V72L690 81H670L661 72V52Z"/>
+    <path d="M836 67H856L865 76V96L856 105H836L827 96V76Z"/>
+    <path d="M817 184H837L846 193V213L837 222H817L808 213V193Z"/>
+    <path d="M654 174H674L683 183V203L674 212H654L645 203V183Z"/>
+  </g>
+  <path d="M719 88H765L784 107V153L765 172H719L700 153V107Z" fill="#272820" stroke="#a38b57" stroke-width="2"/>
+  <path d="M726 102H758L770 114V146L758 158H726L714 146V114Z" fill="#ffd37f"/>
+  <path d="M732 115V145M752 115V145M732 130H752" fill="none" stroke="#332c20" stroke-width="5"/>
+  <g fill="#ffd37f">
+    <rect x="675" y="57" width="10" height="10" rx="2"/>
+    <rect x="841" y="81" width="10" height="10" rx="2"/>
+  </g>
+  <g fill="#9bb7a4">
+    <rect x="822" y="198" width="10" height="10" rx="2"/>
+    <rect x="659" y="188" width="10" height="10" rx="2"/>
+  </g>
+</svg>

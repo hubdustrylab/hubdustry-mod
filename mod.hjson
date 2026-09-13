@@ -1,0 +1,10 @@
+name: hubdustry
+displayName: Hubdustry
+author: Hubdustry Community
+description: A community hub for Mindustry.
+version: 0.1.0
+minGameVersion: 160.3
+repo: hubdustrylab/hubdustry-mod
+java: true
+hidden: true
+main: com.hubdustry.mod.HubdustryMod

@@ -1,8 +1,13 @@
-# Hubdustry Mod
+<p align="center">
+  <img src="assets/hero.svg" width="100%" alt="Hubdustry" />
+</p>
 
-Hubdustry mod for Mindustry.
+<p align="center">A community hub for Mindustry.<br />Play, connect, and explore together.</p>
 
-This repository is used to distribute public builds and installation instructions.
-Source code is maintained separately.
+<p align="center">
+  <a href="https://github.com/hubdustrylab/hubdustry-mod/releases/latest"><img src="assets/download.svg" width="172" height="56" alt="Download Hubdustry" /></a>
+  &nbsp;
+  <a href="https://discord.gg/PuYRU4xTeY"><img src="assets/discord.svg" width="210" height="56" alt="Join our Discord" /></a>
+</p>
 
-Published builds will be available on the [Releases page](https://github.com/hubdustrylab/hubdustry-mod/releases).
+<p align="center">Mindustry 160.3+ &middot; Desktop &amp; Android</p>

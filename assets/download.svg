@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="172" height="48" viewBox="0 0 172 48" role="img" aria-labelledby="title">
+  <title id="title">Download Hubdustry</title>
+  <path d="M9 1H163L171 9V39L163 47H9L1 39V9Z" fill="#ffd37f" stroke="#e8bb65" stroke-width="2"/>
+  <path d="M27 14V29M21 23L27 29L33 23M20 33H34" fill="none" stroke="#30291d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="49" y="30" fill="#30291d" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="600">Download</text>
+</svg>

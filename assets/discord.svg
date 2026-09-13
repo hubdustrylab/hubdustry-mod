@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="210" height="48" viewBox="0 0 210 48" role="img" aria-labelledby="title">
+  <title id="title">Join our Discord</title>
+  <path d="M9 1H201L209 9V39L201 47H9L1 39V9Z" fill="#20242b" stroke="#535965" stroke-width="2"/>
+  <path d="M21 15H36L40 19V28L36 32H29L23 36V32H21L17 28V19Z" fill="none" stroke="#b3c5d5" stroke-width="2" stroke-linejoin="round"/>
+  <circle cx="25" cy="24" r="1.5" fill="#b3c5d5"/>
+  <circle cx="32" cy="24" r="1.5" fill="#b3c5d5"/>
+  <text x="53" y="30" fill="#edf0f5" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="600">Join our Discord</text>
+</svg>
