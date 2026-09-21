@@ -2,7 +2,7 @@ name: hubdustry
 displayName: Hubdustry
 author: Hubdustry Community
 description: A community hub for Mindustry.
-version: 0.1.7
+version: 0.1.8
 minGameVersion: 160.3
 repo: hubdustrylab/hubdustry-mod
 java: true
