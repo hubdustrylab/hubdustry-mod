@@ -44,7 +44,7 @@ class LibraryApiContractTest {
             val bytes = byteArrayOf(1, 2, 3)
             exchange.sendResponseHeaders(200, bytes.size.toLong()); exchange.responseBody.use { it.write(bytes) }
         }
-        val item = """{"id":"li_12345678901234567890123456789012","kind":"MAP","name":"Map","description":"d","tags":["base"],"ownerId":"owner","uploaderId":"uploader","revision":1,"state":"HIDDEN","sha256":"${"a".repeat(64)}","sizeBytes":3,"assetId":"asset","previewRequestId":"preview","artifactId":null,"width":64,"height":32,"createdAt":1700000000000,"updatedAt":1700000001000,"rank":{"score":4.5,"tier":"QUALITY","ratingCount":3,"expertCount":1,"version":"library-rank-v1"},"attribution":{"creditName":"Author","sourceUrl":null,"createdAt":1700000000000,"verified":false,"authorId":null,"identityVerified":false,"licenseNotice":null},"capabilities":["library.edit.own","library.rate"]}"""
+        val item = """{"id":"li_12345678901234567890123456789012","kind":"MAP","name":"Map","description":"d","tags":["base"],"ownerId":"owner","uploaderId":"uploader","revision":1,"state":"HIDDEN","sha256":"${"a".repeat(64)}","sizeBytes":3,"assetId":"asset","previewRequestId":"preview","artifactId":null,"width":64,"height":32,"createdAt":1700000000000,"updatedAt":1700000001000,"rank":{"score":4.5,"tier":"QUALITY","ratingCount":3,"expertCount":1,"version":"library-rank-v1"},"attribution":{"creditName":"Author","sourceUrl":null,"createdAt":1700000000000,"verified":false,"authorId":null,"identityVerified":false,"licenseNotice":null,"sourceHistory":{"firstCommit":"${"b".repeat(40)}","firstPath":"old/a.msch","firstCommittedAt":1600000000000,"importedAt":1700000000000}},"capabilities":["library.edit.own","library.rate"]}"""
         var protocol = ""; var mod = ""; var game = ""; var platform = ""; var correlation = ""; var query = ""
         server.createContext("/v1/library/items") { exchange ->
             protocol = exchange.requestHeaders.getFirst("X-Hubdustry-Protocol")
@@ -67,6 +67,9 @@ class LibraryApiContractTest {
             assertEquals("kind=MAP&sort=recommended&offset=0&limit=24", query)
             assertEquals(LibraryState.HIDDEN, parsed.state); assertEquals("uploader", parsed.uploaderId); assertEquals("owner", parsed.ownerId)
             assertEquals("library-rank-v1", parsed.rank?.version); assertEquals(1700000000000, parsed.createdAt); assertEquals(true, parsed.capabilities.canEdit); assertNull(parsed.attribution?.authorId); assertNull(parsed.attribution?.sourceUrl); assertNull(parsed.artifactId)
+            assertEquals(1600000000000, parsed.attribution?.sourceHistory?.firstCommittedAt)
+            assertEquals(1700000000000, parsed.attribution?.sourceHistory?.importedAt)
+            assertEquals("b".repeat(40), parsed.attribution?.sourceHistory?.firstCommit)
             val imageLatch = CountDownLatch(1); var image: ByteArray? = null
             LibraryApi("http://127.0.0.1:${server.address.port}", executor).image(null, parsed) { image = it.value; imageLatch.countDown() }
             assertTrue(imageLatch.await(5, java.util.concurrent.TimeUnit.SECONDS))

@@ -3523,80 +3523,14 @@
     }
   },
   "components": {
-    "parameters": {
-      "CorrelationId": {
-        "name": "X-Correlation-Id",
-        "in": "header",
-        "required": true,
-        "schema": {
-          "type": "string",
-          "pattern": "^corr_[A-Za-z0-9_-]{16,128}$"
-        }
-      },
-      "Platform": {
-        "name": "X-Hubdustry-Platform",
-        "in": "header",
-        "required": true,
-        "schema": {
-          "type": "string",
-          "enum": [
-            "desktop",
-            "android",
-            "ios",
-            "server"
-          ]
-        }
-      },
-      "GameVersion": {
-        "name": "X-Hubdustry-Game-Version",
-        "in": "header",
-        "required": true,
-        "schema": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 64
-        }
-      },
-      "ModVersion": {
-        "name": "X-Hubdustry-Mod-Version",
-        "in": "header",
-        "required": true,
-        "schema": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 64
-        }
-      },
-      "ProtocolVersion": {
-        "name": "X-Hubdustry-Protocol",
-        "in": "header",
-        "required": true,
-        "schema": {
-          "type": "string",
-          "const": "1"
-        }
-      },
-      "PairingId": {
-        "name": "pairingId",
-        "in": "path",
-        "required": true,
-        "schema": {
-          "type": "string",
-          "pattern": "^hp_[A-Za-z0-9_-]{32,128}$"
-        }
-      },
-      "IdempotencyKey": {
-        "name": "Idempotency-Key",
-        "in": "header",
-        "required": true,
-        "schema": {
-          "type": "string",
-          "minLength": 16,
-          "maxLength": 128
-        }
-      }
-    },
     "schemas": {
+      "LibraryKind": {
+        "type": "string",
+        "enum": [
+          "SCHEMATIC",
+          "MAP"
+        ]
+      },
       "LibraryError": {
         "type": "object",
         "required": [
@@ -3700,6 +3634,76 @@
           }
         },
         "additionalProperties": false
+      },
+      "LibraryTagCatalog": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "kind",
+          "categories"
+        ],
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/LibraryKind"
+          },
+          "categories": {
+            "type": "array",
+            "maxItems": 1000,
+            "items": {
+              "$ref": "#/components/schemas/LibraryTagCategory"
+            }
+          }
+        }
+      },
+      "LibraryTagCategory": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "label",
+          "multiple",
+          "tags"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "maxLength": 48
+          },
+          "label": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "multiple": {
+            "type": "boolean"
+          },
+          "tags": {
+            "type": "array",
+            "maxItems": 1000,
+            "items": {
+              "$ref": "#/components/schemas/LibrarySystemTag"
+            }
+          }
+        }
+      },
+      "LibrarySystemTag": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "label"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9_-]{0,47}$"
+          },
+          "label": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          }
+        }
       },
       "LibraryItem": {
         "type": "object",
@@ -3929,6 +3933,17 @@
                 "type": "null"
               }
             ]
+          },
+          "sourceHistory": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LibrarySourceHistory"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Immutable source history, absent for legacy items without history evidence."
           }
         },
         "required": [
@@ -3939,6 +3954,40 @@
           "authorId",
           "identityVerified",
           "licenseNotice"
+        ]
+      },
+      "LibrarySourceHistory": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "firstCommit": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{40}$",
+            "description": "First addition commit in the complete pinned source history, not the snapshot commit."
+          },
+          "firstPath": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512
+          },
+          "firstCommittedAt": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991,
+            "description": "UTC Unix milliseconds from the first addition committer timestamp. Not a verified creation time or GitHub push time."
+          },
+          "importedAt": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991,
+            "description": "Server time of the successful trusted attribution import, in UTC Unix milliseconds."
+          }
+        },
+        "required": [
+          "firstCommit",
+          "firstPath",
+          "firstCommittedAt",
+          "importedAt"
         ]
       },
       "LibraryRank": {
@@ -3992,13 +4041,6 @@
           "PUBLISHED",
           "HIDDEN",
           "ARCHIVED"
-        ]
-      },
-      "LibraryKind": {
-        "type": "string",
-        "enum": [
-          "SCHEMATIC",
-          "MAP"
         ]
       },
       "LibraryEdit": {
@@ -4213,6 +4255,9 @@
             "type": "boolean",
             "default": false,
             "description": "Atomically publish after valid preview evidence, without waiting for the credited author to sign in."
+          },
+          "sourceHistory": {
+            "$ref": "#/components/schemas/LibrarySourceHistoryClaim"
           }
         },
         "required": [
@@ -4224,6 +4269,33 @@
           "creditName",
           "discordUserId",
           "sourceLicense"
+        ]
+      },
+      "LibrarySourceHistoryClaim": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "firstCommit": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{40}$",
+            "description": "First addition commit in the complete pinned source history, not the snapshot commit."
+          },
+          "firstPath": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512
+          },
+          "firstCommittedAt": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991,
+            "description": "UTC Unix milliseconds from the first addition committer timestamp. Not a verified creation time or GitHub push time."
+          }
+        },
+        "required": [
+          "firstCommit",
+          "firstPath",
+          "firstCommittedAt"
         ]
       },
       "LibraryRating": {
@@ -4742,75 +4814,78 @@
           }
         },
         "additionalProperties": false
-      },
-      "LibrarySystemTag": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "id",
-          "label"
-        ],
-        "properties": {
-          "id": {
-            "type": "string",
-            "pattern": "^[a-z0-9][a-z0-9_-]{0,47}$"
-          },
-          "label": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 100
-          }
+      }
+    },
+    "parameters": {
+      "CorrelationId": {
+        "name": "X-Correlation-Id",
+        "in": "header",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "pattern": "^corr_[A-Za-z0-9_-]{16,128}$"
         }
       },
-      "LibraryTagCategory": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "id",
-          "label",
-          "multiple",
-          "tags"
-        ],
-        "properties": {
-          "id": {
-            "type": "string",
-            "maxLength": 48
-          },
-          "label": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 100
-          },
-          "multiple": {
-            "type": "boolean"
-          },
-          "tags": {
-            "type": "array",
-            "maxItems": 1000,
-            "items": {
-              "$ref": "#/components/schemas/LibrarySystemTag"
-            }
-          }
+      "Platform": {
+        "name": "X-Hubdustry-Platform",
+        "in": "header",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "enum": [
+            "desktop",
+            "android",
+            "ios",
+            "server"
+          ]
         }
       },
-      "LibraryTagCatalog": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "kind",
-          "categories"
-        ],
-        "properties": {
-          "kind": {
-            "$ref": "#/components/schemas/LibraryKind"
-          },
-          "categories": {
-            "type": "array",
-            "maxItems": 1000,
-            "items": {
-              "$ref": "#/components/schemas/LibraryTagCategory"
-            }
-          }
+      "GameVersion": {
+        "name": "X-Hubdustry-Game-Version",
+        "in": "header",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        }
+      },
+      "ModVersion": {
+        "name": "X-Hubdustry-Mod-Version",
+        "in": "header",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        }
+      },
+      "ProtocolVersion": {
+        "name": "X-Hubdustry-Protocol",
+        "in": "header",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "const": "1"
+        }
+      },
+      "PairingId": {
+        "name": "pairingId",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "pattern": "^hp_[A-Za-z0-9_-]{32,128}$"
+        }
+      },
+      "IdempotencyKey": {
+        "name": "Idempotency-Key",
+        "in": "header",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "minLength": 16,
+          "maxLength": 128
         }
       }
     },

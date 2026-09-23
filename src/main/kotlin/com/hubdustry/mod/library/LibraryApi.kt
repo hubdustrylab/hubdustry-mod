@@ -163,12 +163,18 @@ class LibraryApi(
         if (x.has("tags")) for (tag in x.get("tags").asArray()) tags += tag.asString()
         val attribution = if (x.has("attribution") && !x.get("attribution").isNull && x.get("attribution").isObject) {
             val a = x.get("attribution")
+            val history = if (a.has("sourceHistory") && !a.get("sourceHistory").isNull) {
+                val h = a.get("sourceHistory")
+                SourceHistory(h.getString("firstCommit"), h.getString("firstPath"), h.getLong("firstCommittedAt", -1), h.getLong("importedAt", -1)).also {
+                    require(it.firstCommittedAt >= 0 && it.importedAt >= it.firstCommittedAt)
+                }
+            } else null
             Attribution(nullableString(a, "creditName"), nullableString(a, "authorId"),
                 a.has("identityVerified") && a.get("identityVerified").asBool(),
                 nullableString(a, "sourceUrl"),
                 if (a.has("createdAt") && !a.get("createdAt").isNull) a.getLong("createdAt", 0) else null,
                 a.has("verified") && a.get("verified").asBool(),
-                nullableString(a, "licenseNotice"))
+                nullableString(a, "licenseNotice"), history)
         } else null
         val permissions = if (x.has("capabilities")) {
             val names = LinkedHashSet<String>(); for (n in x.get("capabilities").asArray()) names += if (n.isObject) n.getString("name") else n.asString(); LibraryCapabilities(if (x.has("actorId")) x.getString("actorId") else null, names)

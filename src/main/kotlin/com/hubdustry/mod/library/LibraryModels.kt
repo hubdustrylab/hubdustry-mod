@@ -20,8 +20,10 @@ data class LibraryCapabilities(val actorId: String? = null, val names: Set<Strin
 data class Attribution(
     val creditName: String?, val authorId: String?, val identityVerified: Boolean,
     val sourceUrl: String?, val createdAt: Long?, val verified: Boolean = false,
-    val licenseNotice: String? = null
+    val licenseNotice: String? = null, val sourceHistory: SourceHistory? = null
 )
+
+data class SourceHistory(val firstCommit: String, val firstPath: String, val firstCommittedAt: Long, val importedAt: Long)
 
 data class LibraryItem(
     val id: String, val kind: ContentKind, val name: String, val description: String,

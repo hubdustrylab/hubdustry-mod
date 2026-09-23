@@ -346,6 +346,12 @@ class LibraryBrowser {
             body.add(preview).height((Core.graphics.height / Scl.scl(1f) * .42f).coerceIn(180f, 400f)).row()
             item.attribution?.creditName?.let { body.add(Core.bundle.get("hubdustry.library.author") + ": " + it.replace("[", "[[")).wrap().row() }
             if (item.attribution?.identityVerified == true) { body.add("@hubdustry.library.author-verified").wrap().get().name = "library.label.accent"; body.row() }
+            item.attribution?.sourceHistory?.let { history ->
+                val format = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss 'UTC'", java.util.Locale.ROOT)
+                format.timeZone = java.util.TimeZone.getTimeZone("UTC")
+                body.add(Core.bundle.format("hubdustry.library.source-first-recorded", format.format(java.util.Date(history.firstCommittedAt)))).wrap().get().name = "library.label.secondary"; body.row()
+                body.add(Core.bundle.format("hubdustry.library.imported-at", format.format(java.util.Date(history.importedAt)))).wrap().get().name = "library.label.secondary"; body.row()
+            }
             body.add("@hubdustry.library.kind." + item.kind.name.lowercase()).row()
             if (item.width != null && item.height != null) { body.add("${item.width} × ${item.height}").get().name = "library.label.secondary"; body.row() }
             item.rank?.let {
