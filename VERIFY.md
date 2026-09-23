@@ -8,7 +8,7 @@ Download `hubdustry-mod.jar`, `release-manifest.json` and `release-manifest.sig`
 from the same release into a folder, then use Node.js 24:
 
 ```sh
-node verify-release.mjs --bundle path/to/downloads --release 0.1.4
+node verify-release.mjs --bundle path/to/downloads --release 0.2.0
 ```
 
 The expected publisher key fingerprint is:
@@ -19,3 +19,15 @@ The expected publisher key fingerprint is:
 
 This checks the signed manifest and the exact JAR bytes. Mindustry's built-in
 Mod Browser does not run this separate verification step.
+
+Kotlin releases use manifest version2 and the same publisher key. Their platform
+alternatives are `hubdustry-mod-desktop.jar` and `hubdustry-mod-android.jar`; use
+`--variant desktop` or `--variant android` to verify the selected alternative.
+The default remains the universal `hubdustry-mod.jar`. Version1 manifests and
+their earlier artifact names remain supported.
+
+Version2 identifies `sourceRepository` and the exact `sourceRevision`.
+`productionSourcesSha256` hashes the publisher's uncompressed `git archive`
+source tar, and `recipeSha256` hashes the canonical JSON list of build-input
+paths and SHA-256 digests. These are source/build identities; they do not claim
+independently reproducible builds, game acceptance or release approval.

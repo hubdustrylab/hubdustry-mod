@@ -11,6 +11,11 @@ export const ARTIFACTS = Object.freeze({
   desktop: { file: "hubdustry-mod-desktop-protected.jar", maxBytes: 3670016 },
   android: { file: "hubdustry-mod-android-protected.jar", maxBytes: 2097152 },
 });
+export const KOTLIN_ARTIFACTS = Object.freeze({
+  universal: { file: "hubdustry-mod.jar", maxBytes: 5767168 },
+  desktop: { file: "hubdustry-mod-desktop.jar", maxBytes: 3670016 },
+  android: { file: "hubdustry-mod-android.jar", maxBytes: 2097152 },
+});
 export const sha256 = (bytes) => createHash("sha256").update(bytes).digest("hex");
 export const encode = (value) => Buffer.from(JSON.stringify(value, null, 2) + "\n");
 export function readBounded(file, maximum) {
@@ -52,18 +57,22 @@ export function verifyBundle(bundle, trust, expectedRelease, variant = "universa
   const manifest = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(manifestBytes));
   // A canonical byte round-trip rejects duplicate keys, alternate encodings and trailing payloads.
   if (!encode(manifest).equals(manifestBytes)) throw new Error("MANIFEST_ENCODING_INVALID");
-  fields(manifest, ["schemaVersion", "product", "releaseId", "keyId", "createdAt", "productionSourcesSha256", "recipeSha256", "artifacts"]);
-  if (manifest.schemaVersion !== 1 || manifest.product !== "hubdustry-mod" || manifest.keyId !== trust.keyId) throw new Error("MANIFEST_IDENTITY_INVALID");
+  if (![1, 2].includes(manifest.schemaVersion)) throw new Error("MANIFEST_IDENTITY_INVALID");
+  const kotlin = manifest.schemaVersion === 2;
+  fields(manifest, ["schemaVersion", "product", "releaseId", "keyId", "createdAt", "productionSourcesSha256", "recipeSha256", "artifacts", ...(kotlin ? ["sourceRepository", "sourceRevision"] : [])]);
+  if (manifest.product !== "hubdustry-mod" || manifest.keyId !== trust.keyId) throw new Error("MANIFEST_IDENTITY_INVALID");
+  if (kotlin && (manifest.sourceRepository !== "hubdustrylab/hubdustry-mod" || typeof manifest.sourceRevision !== "string" || !/^[a-f0-9]{40}$/u.test(manifest.sourceRevision))) throw new Error("MANIFEST_SOURCE_INVALID");
+  const definitions = kotlin ? KOTLIN_ARTIFACTS : ARTIFACTS;
   if (manifest.releaseId !== expectedRelease) throw new Error("RELEASE_MISMATCH");
   if (typeof manifest.createdAt !== "string" || !Number.isFinite(Date.parse(manifest.createdAt)) || new Date(manifest.createdAt).toISOString() !== manifest.createdAt) throw new Error("MANIFEST_TIME_INVALID");
   digest(manifest.productionSourcesSha256); digest(manifest.recipeSha256);
-  fields(manifest.artifacts, Object.keys(ARTIFACTS));
-  for (const [name, definition] of Object.entries(ARTIFACTS)) {
+  fields(manifest.artifacts, Object.keys(definitions));
+  for (const [name, definition] of Object.entries(definitions)) {
     const item = manifest.artifacts[name]; fields(item, ["file", "bytes", "sha256"]); digest(item.sha256);
     if (item.file !== definition.file || !Number.isSafeInteger(item.bytes) || item.bytes < 1 || item.bytes > definition.maxBytes) throw new Error("ARTIFACT_METADATA_INVALID");
   }
   // Path selection is exclusively from the verifier's constants, never manifest data.
-  const artifact = manifest.artifacts[variant], bytes = readBounded(join(bundle, ARTIFACTS[variant].file), ARTIFACTS[variant].maxBytes);
+  const artifact = manifest.artifacts[variant], bytes = readBounded(join(bundle, definitions[variant].file), definitions[variant].maxBytes);
   if (bytes.length !== artifact.bytes || sha256(bytes) !== artifact.sha256) throw new Error("ARTIFACT_INTEGRITY_INVALID");
   return { manifest, artifact, bytes };
 }
