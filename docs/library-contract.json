@@ -886,7 +886,8 @@
             "schema": {
               "type": "string",
               "maxLength": 588
-            }
+            },
+            "description": "Comma-separated enabled system tag IDs. Requires kind; all selected tags must match."
           },
           {
             "name": "owner",
@@ -3335,6 +3336,180 @@
           }
         }
       ]
+    },
+    "/v1/library/tags": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/ProtocolVersion"
+        },
+        {
+          "$ref": "#/components/parameters/ModVersion"
+        },
+        {
+          "$ref": "#/components/parameters/GameVersion"
+        },
+        {
+          "$ref": "#/components/parameters/Platform"
+        },
+        {
+          "$ref": "#/components/parameters/CorrelationId"
+        }
+      ],
+      "get": {
+        "operationId": "libraryTags",
+        "tags": [
+          "Library"
+        ],
+        "security": [
+          {},
+          {
+            "hubdustryAccess": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Server-confirmed result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryTagCatalog"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid bounded input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Capability denied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Missing or inaccessible item",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "Bounded library request or integrity failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Stale revision, mismatched idempotency key or preview not ready",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "Bounded library request or integrity failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Bounded library request or integrity failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Bounded library request or integrity failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "426": {
+            "description": "Bounded library request or integrity failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Write limit reached",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "kind",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/LibraryKind"
+            }
+          }
+        ],
+        "description": "Read-only system taxonomy for one content kind. Content APIs never create tags; catalog administration is separate and not exposed by this client."
+      }
     }
   },
   "components": {
@@ -3842,7 +4017,8 @@
               "type": "string",
               "minLength": 1,
               "maxLength": 48
-            }
+            },
+            "description": "Enabled system tag IDs for the source content kind. Unknown, disabled, wrong-kind and exclusive-category conflicts are rejected with INVALID_TAG. Does not create tags."
           },
           "attribution": {
             "anyOf": [
@@ -4127,7 +4303,8 @@
               "type": "string",
               "minLength": 1,
               "maxLength": 48
-            }
+            },
+            "description": "Enabled system tag IDs for the source content kind. Unknown, disabled, wrong-kind and exclusive-category conflicts are rejected with INVALID_TAG. Does not create tags."
           },
           "attribution": {
             "anyOf": [
@@ -4555,6 +4732,76 @@
           }
         },
         "additionalProperties": false
+      },
+      "LibrarySystemTag": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "label"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9_-]{0,47}$"
+          },
+          "label": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          }
+        }
+      },
+      "LibraryTagCategory": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "label",
+          "multiple",
+          "tags"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "maxLength": 48
+          },
+          "label": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "multiple": {
+            "type": "boolean"
+          },
+          "tags": {
+            "type": "array",
+            "maxItems": 1000,
+            "items": {
+              "$ref": "#/components/schemas/LibrarySystemTag"
+            }
+          }
+        }
+      },
+      "LibraryTagCatalog": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "kind",
+          "categories"
+        ],
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/LibraryKind"
+          },
+          "categories": {
+            "type": "array",
+            "maxItems": 1000,
+            "items": {
+              "$ref": "#/components/schemas/LibraryTagCategory"
+            }
+          }
+        }
       }
     },
     "responses": {

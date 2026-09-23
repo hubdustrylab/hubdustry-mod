@@ -33,6 +33,9 @@ data class LibraryItem(
 )
 
 data class LibraryPage(val items: List<LibraryItem>, val total: Int, val offset: Int, val limit: Int)
+data class SystemTag(val id: String, val label: String)
+data class TagCategory(val id: String, val label: String, val multiple: Boolean, val tags: List<SystemTag>)
+data class TagCatalog(val kind: ContentKind, val categories: List<TagCategory>)
 
 data class LibraryQuery(
     val kind: ContentKind? = null, val text: String = "", val tags: List<String> = emptyList(),

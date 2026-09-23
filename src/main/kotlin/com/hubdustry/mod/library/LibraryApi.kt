@@ -30,6 +30,18 @@ class LibraryApi(
     fun list(token: String?, query: LibraryQuery, done: (ApiResponse<LibraryPage>) -> Unit): RequestHandle =
         request("GET", "/items?${LibraryQueryEncoder.encode(query)}", token, null, done, ::parsePage)
 
+    fun tags(kind: ContentKind, done: (ApiResponse<TagCatalog>) -> Unit): RequestHandle =
+        request("GET", "/tags?kind=${kind.name}", null, null, done, { raw ->
+            val root = Jval.read(raw)
+            require(ContentKind.valueOf(root.getString("kind")) == kind)
+            val categories = root.get("categories").asArray().toList().map { category ->
+                TagCategory(category.getString("id"), category.getString("label"), category.get("multiple").asBool(),
+                    category.get("tags").asArray().toList().map { tag -> SystemTag(tag.getString("id"), tag.getString("label")) })
+            }
+            require(categories.sumOf { it.tags.size } <= 1000)
+            TagCatalog(kind, categories)
+        })
+
     fun detail(token: String?, id: String, done: (ApiResponse<LibraryItem>) -> Unit): RequestHandle =
         request("GET", "/items/${safeId(id)}", token, null, done, ::parseItem)
 

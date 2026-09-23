@@ -11,6 +11,32 @@ import kotlin.test.assertTrue
 import kotlin.test.assertNull
 
 class LibraryApiContractTest {
+    @Test fun systemTagsAreReadOnlyAndScopedToRequestedKind() {
+        val server = HttpServer.create(InetSocketAddress(0), 0)
+        val executor = Executors.newSingleThreadExecutor()
+        var wrongKind = false
+        server.createContext("/v1/library/tags") { exchange ->
+            assertEquals("GET", exchange.requestMethod)
+            assertEquals("kind=SCHEMATIC", exchange.requestURI.query)
+            val body = """{"kind":"${if (wrongKind) "MAP" else "SCHEMATIC"}","categories":[{"id":"purpose","label":"Purpose","multiple":false,"tags":[{"id":"power","label":"Power"}]}]}""".toByteArray()
+            exchange.sendResponseHeaders(200, body.size.toLong()); exchange.responseBody.use { it.write(body) }
+        }
+        server.start()
+        try {
+            val api = LibraryApi("http://127.0.0.1:${server.address.port}", executor)
+            var result: ApiResponse<TagCatalog>? = null
+            var latch = CountDownLatch(1)
+            api.tags(ContentKind.SCHEMATIC) { result = it; latch.countDown() }
+            assertTrue(latch.await(5, java.util.concurrent.TimeUnit.SECONDS))
+            val category = assertNotNull(result?.value).categories.single()
+            assertEquals(false, category.multiple); assertEquals("power", category.tags.single().id)
+            wrongKind = true; latch = CountDownLatch(1)
+            api.tags(ContentKind.SCHEMATIC) { result = it; latch.countDown() }
+            assertTrue(latch.await(5, java.util.concurrent.TimeUnit.SECONDS))
+            assertNull(result?.value); assertEquals("MALFORMED_RESPONSE", result?.error)
+        } finally { executor.shutdownNow(); server.stop(0) }
+    }
+
     @Test fun parsesAuthoritativeItemAndSendsProtocolHeaders() {
         val server = HttpServer.create(InetSocketAddress(0), 0)
         val item = """{"id":"li_12345678901234567890123456789012","kind":"MAP","name":"Map","description":"d","tags":["base"],"ownerId":"owner","uploaderId":"uploader","revision":1,"state":"HIDDEN","sha256":"${"a".repeat(64)}","sizeBytes":3,"assetId":"asset","previewRequestId":"preview","artifactId":null,"width":64,"height":32,"createdAt":1700000000000,"updatedAt":1700000001000,"rank":{"score":4.5,"tier":"QUALITY","ratingCount":3,"expertCount":1,"version":"library-rank-v1"},"attribution":{"creditName":"Author","sourceUrl":null,"createdAt":1700000000000,"verified":false,"authorId":null,"identityVerified":false,"licenseNotice":null},"capabilities":["library.edit.own","library.rate"]}"""

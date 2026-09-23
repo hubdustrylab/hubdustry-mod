@@ -32,14 +32,17 @@ updater, obfuscated classes, private service implementation or developer
 endpoint. The backend origin is fixed to `https://api.hubdustry.com` and all
 source downloads are size and SHA-256 checked before import.
 
-The client provides a native Arc browser for public schematic and map items.
+Open **Settings → Hubdustry** to choose **Schematic browser** or **Map browser**.
+The two pages keep their own search, filters and position. Image cards open a
+separate detail page; grouped filters and account actions have separate dialogs.
+Tags are selections from the system catalog, not user-created labels.
 Network failures leave ordinary Mindustry gameplay available. Authentication,
 authoring and moderation controls appear only when the backend projects the
 corresponding capability.
 
 This new generation is a development candidate. Full database integration,
-in-game desktop/Android acceptance and production backend activation are release
-gates; a successful build alone does not establish them. Earlier releases remain
+in-game acceptance against the activated backend and production activation are
+release gates; local fixture runs do not establish them. Earlier releases remain
 available while this candidate is validated.
 
 The [public API snapshot](docs/library-contract.json) contains the client-facing
