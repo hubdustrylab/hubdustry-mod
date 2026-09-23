@@ -134,7 +134,7 @@ class LibraryBrowser {
                     rail.row()
                     rail.button("@hubdustry.back", ArchiveUi.navigation(false)) { hide() }.growX().height(48f).padTop(6f)
                 }.width(210f).growY()
-                frame.image(LibraryTheme.fill(LibraryTheme.yellow)).width(6f).growY()
+                frame.image(LibraryTheme.fill(LibraryTheme.accent)).width(6f).growY()
             }
             frame.table { workspace ->
                 workspace.top().margin(if (wide()) 32f else 12f)
@@ -142,7 +142,7 @@ class LibraryBrowser {
                 workspace.table { masthead ->
                     masthead.left()
                     val trail = if (wide()) caption("community") else if (kind == ContentKind.MAP) "02" else "01"
-                    masthead.add(ArchiveUi.text("HUBDUSTRY / " + trail, 12f, LibraryTheme.yellow)).left().growX().minWidth(0f).ellipsis(true)
+                    masthead.add(ArchiveUi.text("HUBDUSTRY / " + trail, 12f, LibraryTheme.accent)).left().growX().minWidth(0f).ellipsis(true)
                     if (!wide()) {
                         val destination = if (kind == ContentKind.MAP) ContentKind.SCHEMATIC else ContentKind.MAP
                         masthead.button(ArchiveUi.icon(if (kind == ContentKind.MAP) "schematic" else "map"), LibraryTheme.icon()) { navigate(destination) }.size(40f).get().name = "library.navigate.${destination.name}"
@@ -246,7 +246,7 @@ class LibraryBrowser {
             card.table { labels ->
                 labels.top().left()
                 if (feature) {
-                    labels.add(ArchiveUi.text("// " + caption("focus") + "  /  001", 12f, LibraryTheme.yellow)).left().padBottom(16f).row()
+                    labels.add(ArchiveUi.text("// " + caption("focus") + "  /  001", 12f, LibraryTheme.accent)).left().padBottom(16f).row()
                 }
                 val title = ArchiveUi.text(item.name.replace("[", "[["), if (feature) 34f else 23f, bold = true)
                 labels.add(title).growX().minWidth(0f).left().ellipsis(true).row()
@@ -254,7 +254,7 @@ class LibraryBrowser {
                 if (feature && item.description.isNotBlank()) labels.add(ArchiveUi.text(item.description.take(160).replace("[", "[["), 16f, LibraryTheme.muted)).wrap().growX().left().padTop(14f).padBottom(10f).row()
                 labels.table { metadata ->
                     metadata.left()
-                    metadata.add(ArchiveUi.text(Core.bundle.get("hubdustry.library.tier.${(item.rank?.tier ?: RankTier.NEW).name.lowercase()}"), 13f, LibraryTheme.yellow)).padRight(12f)
+                    metadata.add(ArchiveUi.text(Core.bundle.get("hubdustry.library.tier.${(item.rank?.tier ?: RankTier.NEW).name.lowercase()}"), 13f, LibraryTheme.accent)).padRight(12f)
                     item.rank?.let { metadata.add(ArchiveUi.text("${it.ratingCount} " + caption("ratings"), 13f, LibraryTheme.muted)) }
                     if (item.width != null && item.height != null) metadata.add(ArchiveUi.text("${item.width} × ${item.height}", 13f, LibraryTheme.muted)).padLeft(12f)
                 }.left().padTop(8f).row()

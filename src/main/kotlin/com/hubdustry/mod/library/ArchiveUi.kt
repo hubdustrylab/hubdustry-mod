@@ -60,14 +60,14 @@ object ArchiveUi {
 
     fun card(feature: Boolean = false) = Button.ButtonStyle().apply {
         up = panel(if (feature) black else LibraryTheme.paper, if (feature) LibraryTheme.muted else LibraryTheme.line, feature, true)
-        over = panel(LibraryTheme.hover, LibraryTheme.yellow, feature, true)
-        down = panel(LibraryTheme.line, LibraryTheme.yellow, feature, true)
+        over = panel(LibraryTheme.hover, LibraryTheme.accent, feature, true)
+        down = panel(LibraryTheme.line, LibraryTheme.accent, feature, true)
         checked = over
     }
 
     fun navigation(selected: Boolean) = TextButton.TextButtonStyle(LibraryTheme.button()).apply {
-        up = panel(if (selected) LibraryTheme.yellow else bone, if (selected) LibraryTheme.yellow else Color.valueOf("c7c8c0"))
-        over = panel(LibraryTheme.yellow, black)
+        up = panel(if (selected) LibraryTheme.accent else bone, if (selected) LibraryTheme.accent else Color.valueOf("c7c8c0"))
+        over = panel(LibraryTheme.accent, black)
         down = over; checked = up
         fontColor = black; overFontColor = black; downFontColor = black; checkedFontColor = black
     }
@@ -75,7 +75,7 @@ object ArchiveUi {
     fun stripes() = object : BaseDrawable() {
         override fun draw(x: Float, y: Float, width: Float, height: Float) {
             val alpha = Draw.getColor().a
-            Draw.color(LibraryTheme.yellow, alpha)
+            Draw.color(LibraryTheme.accent, alpha)
             Fill.rect(x + width / 2f, y + height / 2f, width, height)
             Draw.color(black, alpha)
             Lines.stroke(2f)

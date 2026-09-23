@@ -6,7 +6,7 @@ mod-browser layout. `LibraryTheme` owns scoped fonts and control states without
 changing Mindustry's global style registry.
 
 The composition uses a pale navigation rail against a charcoal workspace, large
-display type, a yellow vertical spine, fine technical rules, grid-backed previews,
+display type, a cryo-cyan vertical spine, fine technical rules, grid-backed previews,
 cut corners and striped accents. Shapes are drawn natively without image assets
 or a web runtime. Native dialog transitions remain available.
 
@@ -17,8 +17,10 @@ or a web runtime. Native dialog transitions remain available.
 | Ink | `#eeeeee` | Text and icons |
 | Muted | `#aaaaaa` | Secondary text |
 | Line | `#383838` | Rules and controls |
-| Yellow | `#fffa00` | Active navigation and primary states |
-| Hover | `#30302c` | Pointer feedback |
+| Accent | `#6ecdec` | Active navigation and primary states |
+| Hover | `#263b43` | Pointer feedback |
+| Accent hover | `#a6eaff` | Illuminated primary action |
+| Selection | `#205263` | Text selection |
 | Bone | `#e7e7df` | Navigation and prominent actions |
 | Black | `#111313` | Text on pale surfaces and preview field |
 | Grid | `#292d2c` | Technical preview guides |
@@ -39,3 +41,7 @@ Search, filters, sort and pagination remain real controls. Images fit without
 cropping and map dimensions remain visible. Grouped filters, account actions
 and details use separate surfaces. Tags select the system catalog. The main
 archive has no floating footer over the results; Back is in the navigation.
+
+Preview images come from the backend's verified renderer output with
+`thumbnail=true`, preserving schematic floors and map terrain. Renditions are
+at most 1024 pixels per side and 2 MiB; the client retains its decode limits.

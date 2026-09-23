@@ -49,7 +49,7 @@ class LibraryApi(
         requestBytes("GET", "/items/${safeId(item.id)}/source", token, null, done, MAX_SOURCE_BYTES)
 
     fun image(token: String?, item: LibraryItem, done: (ApiResponse<ByteArray>) -> Unit): RequestHandle =
-        requestBytes("GET", "/items/${safeId(item.id)}/image", token, null, done, MAX_IMAGE_BYTES)
+        requestBytes("GET", "/items/${safeId(item.id)}/image?thumbnail=true", token, null, done, MAX_IMAGE_BYTES)
 
     fun upload(token: String, kind: ContentKind, bytes: ByteArray, done: (ApiResponse<UploadReceipt>) -> Unit): RequestHandle {
         require(bytes.size in 1..Bounds.MAX_SOURCE_BYTES)

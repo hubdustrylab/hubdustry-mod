@@ -26,8 +26,8 @@ object LibraryTheme {
     val ink = Color.valueOf("eeeeee")
     val muted = Color.valueOf("aaaaaa")
     val line = Color.valueOf("383838")
-    val yellow = Color.valueOf("fffa00")
-    val hover = Color.valueOf("30302c")
+    val accent = Color.valueOf("6ecdec")
+    val hover = Color.valueOf("263b43")
     val onAccent = Color.valueOf("191919")
 
     private val ownedFonts = mutableListOf<Pair<Font, FreeTypeFontGenerator>>()
@@ -75,14 +75,14 @@ object LibraryTheme {
         downFontColor = onAccent; overFontColor = fontColor
         checkedFontColor = if (primary || selection) onAccent else ink
         disabledFontColor = muted
-        up = ArchiveUi.panel(if (primary) yellow else paper, if (primary) yellow else line, cut = true)
-        over = ArchiveUi.panel(if (primary) Color.valueOf("e6e100") else hover, yellow, cut = true)
-        down = ArchiveUi.panel(yellow, yellow, cut = true); checked = if (selection) down else up; checkedOver = if (selection) down else over
+        up = ArchiveUi.panel(if (primary) accent else paper, if (primary) accent else line, cut = true)
+        over = ArchiveUi.panel(if (primary) Color.valueOf("a6eaff") else hover, accent, cut = true)
+        down = ArchiveUi.panel(accent, accent, cut = true); checked = if (selection) down else up; checkedOver = if (selection) down else over
         disabled = fill(canvas)
     }
 
     fun icon() = ImageButton.ImageButtonStyle(Styles.emptyi).apply {
-        up = fill(paper); over = fill(hover); down = fill(yellow); checked = up
+        up = fill(paper); over = fill(hover); down = fill(accent); checked = up
         imageUpColor = ink; imageOverColor = ink; imageDownColor = onAccent; imageCheckedColor = ink
         imageDisabledColor = muted
     }
@@ -108,8 +108,8 @@ object LibraryTheme {
                 font = body; messageFont = body
                 fontColor = ink; focusedFontColor = ink; messageFontColor = muted
                 background = fill(paper); focusedBackground = fill(paper)
-                cursor = fill(yellow).apply { minWidth = 2f }
-                selection = fill(Color.valueOf("5a5700"))
+                cursor = fill(accent).apply { minWidth = 2f }
+                selection = fill(Color.valueOf("205263"))
                 }
                 element.update {
                     val wanted = fontFor(element.text)
@@ -117,7 +117,7 @@ object LibraryTheme {
                 }
             }
             is Label -> {
-                val tone = when (element.name) { "library.label.accent" -> yellow; "library.label.secondary" -> muted; else -> ink }
+                val tone = when (element.name) { "library.label.accent" -> accent; "library.label.secondary" -> muted; else -> ink }
                 element.style = label(color = tone, text = element.text); element.setColor(Color.white)
             }
             is ScrollPane -> element.style = ScrollPane.ScrollPaneStyle(element.style).apply {

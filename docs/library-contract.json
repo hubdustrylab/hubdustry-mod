@@ -2973,6 +2973,16 @@
             "pattern": "^li_[a-zA-Z0-9_-]{16,64}$",
             "maxLength": 67
           }
+        },
+        {
+          "name": "thumbnail",
+          "in": "query",
+          "required": false,
+          "description": "Return a bounded rendition of the verified renderer image, retaining its background. At most 1024 pixels per side and 2 MiB. Omit for exact original bytes.",
+          "schema": {
+            "type": "boolean",
+            "default": false
+          }
         }
       ],
       "get": {
@@ -2988,7 +2998,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Current-access checked immutable bytes",
+            "description": "Current-access checked original image or bounded thumbnail; X-Content-SHA256 identifies the returned bytes",
             "headers": {
               "X-Content-SHA256": {
                 "schema": {
