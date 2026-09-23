@@ -33,6 +33,7 @@ object LibraryTheme {
     private val ownedFonts = mutableListOf<Pair<Font, FreeTypeFontGenerator>>()
     private val body: Font by lazy { font("Barlow-Regular.ttf", 20) }
     private val bold: Font by lazy { font("Barlow-Bold.ttf", 28) }
+    private val display: Font by lazy { font("Barlow-Bold.ttf", 72) }
 
     init { Events.on(DisposeEvent::class.java) {
         ownedFonts.forEach { (font, generator) ->
@@ -64,6 +65,8 @@ object LibraryTheme {
         if (text.any { it.code > 0x024f && it.code !in 0x1e00..0x1eff && it.code !in 0x2000..0x206f }) Fonts.def else if (heading) bold else body
 
     fun label(heading: Boolean = false, color: Color = ink, text: CharSequence = "") = Label.LabelStyle(fontFor(text, heading), color)
+    fun displayLabel(color: Color, text: CharSequence): Label.LabelStyle? =
+        if (fontFor(text, true) === Fonts.def) null else Label.LabelStyle(display, color)
     fun width() = (Core.graphics.width / Scl.scl(1f) - 52f).coerceIn(240f, 1280f)
 
     fun button(primary: Boolean = false, selection: Boolean = false) = TextButton.TextButtonStyle(Styles.defaultt).apply {
@@ -72,9 +75,9 @@ object LibraryTheme {
         downFontColor = onAccent; overFontColor = fontColor
         checkedFontColor = if (primary || selection) onAccent else ink
         disabledFontColor = muted
-        up = fill(if (primary) yellow else line)
-        over = fill(if (primary) Color.valueOf("e6e100") else hover)
-        down = fill(yellow); checked = if (selection) fill(yellow) else up; checkedOver = if (selection) fill(yellow) else over
+        up = ArchiveUi.panel(if (primary) yellow else paper, if (primary) yellow else line, cut = true)
+        over = ArchiveUi.panel(if (primary) Color.valueOf("e6e100") else hover, yellow, cut = true)
+        down = ArchiveUi.panel(yellow, yellow, cut = true); checked = if (selection) down else up; checkedOver = if (selection) down else over
         disabled = fill(canvas)
     }
 
@@ -113,7 +116,10 @@ object LibraryTheme {
                     if (element.style.font !== wanted) element.style = TextField.TextFieldStyle(element.style).apply { font = wanted }
                 }
             }
-            is Label -> { element.style = label(text = element.text); element.setColor(Color.white) }
+            is Label -> {
+                val tone = when (element.name) { "library.label.accent" -> yellow; "library.label.secondary" -> muted; else -> ink }
+                element.style = label(color = tone, text = element.text); element.setColor(Color.white)
+            }
             is ScrollPane -> element.style = ScrollPane.ScrollPaneStyle(element.style).apply {
                 vScroll = fill(line).apply { minWidth = 4f }
                 vScrollKnob = fill(muted).apply { minWidth = 4f; minHeight = 32f }
@@ -133,10 +139,9 @@ object LibraryTheme {
         dialog.title.setAlignment(Align.left)
         dialog.title.setFontScale(1.25f)
         dialog.titleTable.clear()
-        var badge: arc.scene.ui.layout.Cell<arc.scene.ui.layout.Table>? = null
         val header = dialog.titleTable.table { row ->
             row.left().marginTop(14f).marginBottom(12f)
-            badge = row.table { tile -> tile.background(fill(yellow)); tile.add(if (section.endsWith("02")) "02" else "01", label(true, onAccent)).center() }.size(60f).padRight(18f)
+            row.image(ArchiveUi.stripes()).width(8f).height(58f).padRight(20f)
             row.table { text ->
                 text.add(section, label(false, muted)).fontScale(.7f).left().row()
                 text.add(dialog.title).growX().minWidth(0f).left()
@@ -151,7 +156,6 @@ object LibraryTheme {
             val narrow = available < 600f
             if (compact != narrow) {
                 compact = narrow
-                badge?.size(if (narrow) 44f else 60f)?.padRight(if (narrow) 12f else 18f)
                 dialog.title.setFontScale(if (narrow) .8f else 1.25f)
                 dialog.titleTable.invalidateHierarchy()
             }

@@ -17,10 +17,8 @@ import mindustry.Vars
 import mindustry.game.Schematics
 import mindustry.gen.Icon
 import mindustry.gen.Tex
-import mindustry.graphics.Pal
 import mindustry.ui.Styles
 import mindustry.ui.dialogs.BaseDialog
-import mindustry.ui.dialogs.ModBrowserDialog
 import mindustry.ui.FileChooser
 import java.io.ByteArrayInputStream
 import java.util.concurrent.Executors
@@ -45,7 +43,7 @@ class LibraryBrowser {
     fun dialog(): LibraryDialog = dialog(ContentKind.SCHEMATIC)
     fun dialog(kind: ContentKind): LibraryDialog = views.getOrPut(kind) { LibraryDialog(kind) }
 
-    inner class LibraryDialog(private val kind: ContentKind) : ModBrowserDialog() {
+    inner class LibraryDialog(private val kind: ContentKind) : BaseDialog("") {
         private val generation = AtomicLong()
         private var query = LibraryQuery(kind = kind)
         private var page = LibraryPage(emptyList(), 0, 0, 24)
@@ -60,45 +58,36 @@ class LibraryBrowser {
         private val detailGeneration = AtomicLong()
         private val pageLabel = arc.scene.ui.Label("")
         private val textures = LinkedHashMap<String, Texture>()
-        private val listing: ScrollPane
-        private val header: Table
+        private val browserTable = Table()
+        private val listing = ScrollPane(browserTable)
+        private val search = TextField("")
+
+        private fun wide() = Core.graphics.width / Scl.scl(1f) >= 900f
+        private fun contentWidth() = (Core.graphics.width / Scl.scl(1f) - if (wide()) 294f else 32f).coerceIn(240f, 1680f)
+        private fun caption(key: String) = Core.bundle.get("hubdustry.archive.$key")
 
         init {
             name = "library.browser.${kind.name}"
-            title.setText(if (kind == ContentKind.MAP) "@hubdustry.library.maps" else "@hubdustry.library.schematics")
-            header = cont.children.get(0) as Table
-            listing = cont.children.get(1) as ScrollPane
             listing.name = "library.scroll"
-            val zoom = header.children.get(0)
-            val search = header.children.get(1) as TextField
+            listing.setScrollingDisabled(true, false)
             search.name = "library.search"
             search.setMessageText(if (kind == ContentKind.MAP) "@hubdustry.library.search-maps" else "@hubdustry.library.search-schematics")
             search.setMaxLength(Bounds.MAX_TEXT)
-            zoom.setColor(LibraryTheme.ink)
-            val tools = Table()
-            tools.button(Icon.filter, Styles.emptyi) {
-                withCatalog { catalog ->
-                    LibraryFilters(query, catalog, account.session != null) { next ->
-                        query = next; listing.setScrollY(0f); load()
-                    }.show()
+            search.changed {
+                val next = search.text.take(Bounds.MAX_TEXT)
+                if (next != query.text) {
+                    query = query.copy(text = next, offset = 0)
+                    listing.setScrollY(0f); load()
                 }
-            }.size(44f).tooltip("@hubdustry.library.filters").get().name = "library.filter"
-            tools.button(Icon.refresh, Styles.emptyi) { load() }.size(44f).tooltip("@refresh").get().name = "library.refresh"
-            tools.button(Icon.settings, Styles.emptyi) { accountDialog() }.size(44f).tooltip("@hubdustry.account").get().name = "library.account"
-            fun layoutHeader() {
-                header.clear()
-                header.background(LibraryTheme.fill(LibraryTheme.paper)).margin(10f)
-                header.add(zoom).padRight(8f)
-                header.add(search).growX().minWidth(0f)
-                if (LibraryTheme.width() < 600f) {
-                    header.row()
-                    header.add(tools).colspan(2).right().padTop(6f)
-                } else header.add(tools)
             }
-            layoutHeader()
+            LibraryTheme.controls(search); LibraryTheme.controls(listing)
+            status.style = LibraryTheme.label(color = LibraryTheme.muted)
+            pageLabel.style = LibraryTheme.label()
+            background(LibraryTheme.fill(LibraryTheme.canvas))
+            closeOnBack()
             shown {
+                layoutChrome()
                 val token = generation.incrementAndGet().also { generationAtOpen.set(it) }
-                // Arc fires shown before attaching the dialog to its scene.
                 Core.app.post { if (isShown && token == generationAtOpen.get()) load() }
             }
             hidden {
@@ -108,37 +97,91 @@ class LibraryBrowser {
                 sourceRequest?.cancel(); sourceRequest = null
                 generationAtOpen.set(generation.incrementAndGet()); detailGeneration.incrementAndGet()
             }
-            cont.clear()
-            // Keep the native overlay footer outside the scrolling viewport.
-            cont.top().marginBottom(84f).add(header).growX().padTop(14f).row()
-            val bar = Table()
-            val sort = bar.button("", Styles.defaultt, Runnable { sortDialog() }).get()
-            sort.update { sort.setText("@hubdustry.library.sort.${query.sort.name.lowercase()}") }
-            val navigation = Table()
-            navigation.button(Icon.left, Styles.emptyi, Runnable { if (page.offset > 0) { query = query.copy(offset = (page.offset - query.limit).coerceAtLeast(0)); listing.setScrollY(0f); load() } }).size(40f)
-            navigation.add(pageLabel).pad(6f)
-            navigation.button(Icon.right, Styles.emptyi, Runnable { if (page.offset + page.items.size < page.total) { query = query.copy(offset = page.offset + query.limit); listing.setScrollY(0f); load() } }).size(40f)
-            fun layoutBar() {
-                bar.clear()
-                if (LibraryTheme.width() < 600f) {
-                    bar.add(sort).colspan(2).growX().height(44f).padBottom(6f).row()
-                } else bar.add(sort).width(200f).height(44f).padRight(10f)
-                bar.add(status).growX().minWidth(0f).left()
-                bar.add(navigation).right()
-            }
-            layoutBar()
-            onResize { layoutHeader(); layoutBar() }
-            cont.add(bar).growX().padTop(10f).padBottom(8f).row()
-            cont.add(listing).grow()
-            LibraryTheme.dialog(this, if (kind == ContentKind.MAP) "HUBDUSTRY / LIBRARY 02" else "HUBDUSTRY / LIBRARY 01")
+            onResize { layoutChrome(); rebuild() }
         }
 
-        override fun rebuildBrowser() {
-            if (!isShown || Core.scene.dialog != this) return
-            if (query.text != searchtxt) {
-                query = query.copy(text = searchtxt.take(Bounds.MAX_TEXT), offset = 0)
-                listing.setScrollY(0f); load()
-            } else rebuild()
+        private fun navigate(next: ContentKind) {
+            if (next != kind) { hide(); dialog(next).show() }
+        }
+
+        private fun openFilters() {
+            withCatalog { catalog ->
+                LibraryFilters(query, catalog, account.session != null) { next ->
+                    query = next; listing.setScrollY(0f); load()
+                }.show()
+            }
+        }
+
+        private fun layoutChrome() {
+            clearChildren()
+            val frame = Table()
+            add(frame).grow()
+            if (wide()) {
+                frame.table { rail ->
+                    rail.background(LibraryTheme.fill(ArchiveUi.bone)).top().left().margin(20f)
+                    rail.add(ArchiveUi.text("HUB", 52f, ArchiveUi.black, true)).left().row()
+                    rail.add(ArchiveUi.text("DUSTRY", 35f, ArchiveUi.black, true)).left().padTop(-12f).row()
+                    rail.add(ArchiveUi.text("COMMUNITY / ARCHIVE", 11f, ArchiveUi.black)).left().padTop(12f).padBottom(32f).row()
+                    rail.image(ArchiveUi.stripes()).height(8f).growX().padBottom(32f).row()
+                    for (entry in ContentKind.values()) {
+                        val label = (if (entry == ContentKind.SCHEMATIC) "01   " else "02   ") + caption(if (entry == ContentKind.SCHEMATIC) "schematics" else "maps")
+                        rail.button(label, ArchiveUi.navigation(entry == kind)) { navigate(entry) }.growX().height(58f).padBottom(6f).get().name = "library.navigate.${entry.name}"
+                        rail.row()
+                    }
+                    rail.add().growY().row()
+                    rail.add(ArchiveUi.text("H / 01", 42f, Color.valueOf("a4a69e"), true)).left().padBottom(24f).row()
+                    rail.button("@hubdustry.account", ArchiveUi.navigation(false)) { accountDialog() }.growX().height(48f).get().name = "library.account"
+                    rail.row()
+                    rail.button("@hubdustry.back", ArchiveUi.navigation(false)) { hide() }.growX().height(48f).padTop(6f)
+                }.width(210f).growY()
+                frame.image(LibraryTheme.fill(LibraryTheme.yellow)).width(6f).growY()
+            }
+            frame.table { workspace ->
+                workspace.top().margin(if (wide()) 32f else 12f)
+                val available = contentWidth()
+                workspace.table { masthead ->
+                    masthead.left()
+                    val trail = if (wide()) caption("community") else if (kind == ContentKind.MAP) "02" else "01"
+                    masthead.add(ArchiveUi.text("HUBDUSTRY / " + trail, 12f, LibraryTheme.yellow)).left().growX().minWidth(0f).ellipsis(true)
+                    if (!wide()) {
+                        val destination = if (kind == ContentKind.MAP) ContentKind.SCHEMATIC else ContentKind.MAP
+                        masthead.button(ArchiveUi.icon(if (kind == ContentKind.MAP) "schematic" else "map"), LibraryTheme.icon()) { navigate(destination) }.size(40f).get().name = "library.navigate.${destination.name}"
+                        masthead.button(ArchiveUi.icon("account"), LibraryTheme.icon()) { accountDialog() }.size(40f).get().name = "library.account"
+                        masthead.button(ArchiveUi.icon("close"), LibraryTheme.icon()) { hide() }.size(40f)
+                    }
+                }.width(available).growX().padBottom(8f).row()
+                workspace.table { heading ->
+                    heading.left()
+                    val headingSize = if (wide()) (available * .055f).coerceIn(36f, 66f) else 30f
+                    heading.add(ArchiveUi.text(caption(if (kind == ContentKind.MAP) "map-title" else "schematic-title"), headingSize, bold = true)).left().growX().minWidth(0f).ellipsis(true)
+                    if (wide()) {
+                        heading.add(ArchiveUi.text(if (kind == ContentKind.MAP) "02" else "01", 70f, LibraryTheme.line, true)).right().padLeft(24f)
+                    }
+                }.width(available).padBottom(if (wide()) 18f else 8f).row()
+                workspace.table { toolbar ->
+                    toolbar.background(ArchiveUi.panel(LibraryTheme.paper)).margin(8f)
+                    toolbar.image(ArchiveUi.icon("search")).size(24f).color(LibraryTheme.muted).padRight(10f)
+                    toolbar.add(search).growX().minWidth(0f).height(40f)
+                    toolbar.button(ArchiveUi.icon("filter"), LibraryTheme.icon()) { openFilters() }.size(44f).padLeft(8f).tooltip("@hubdustry.library.filters").get().name = "library.filter"
+                    toolbar.button(ArchiveUi.icon("refresh"), LibraryTheme.icon()) { load() }.size(44f).get().name = "library.refresh"
+                }.width(available).growX().padBottom(12f).row()
+                workspace.table { controls ->
+                    controls.left()
+                    val sortCell = controls.button("", LibraryTheme.button()) { sortDialog() }.height(40f)
+                    val sort = sortCell.get()
+                    sort.update { sort.setText("@hubdustry.library.sort.${query.sort.name.lowercase()}") }
+                    if (wide()) sortCell.width(210f) else { sortCell.colspan(4).growX().padBottom(6f); controls.row() }
+                    controls.add(status).growX().minWidth(0f).left().padLeft(if (wide()) 18f else 0f)
+                    controls.button(ArchiveUi.icon("back"), LibraryTheme.icon()) { if (page.offset > 0) { query = query.copy(offset = (page.offset - query.limit).coerceAtLeast(0)); listing.setScrollY(0f); load() } }.size(36f)
+                    controls.add(pageLabel).pad(5f)
+                    controls.button(ArchiveUi.icon("next"), LibraryTheme.icon()) { if (page.offset + page.items.size < page.total) { query = query.copy(offset = page.offset + query.limit); listing.setScrollY(0f); load() } }.size(36f)
+                }.width(available).growX().padBottom(16f).row()
+                workspace.add(listing).width(available).growY().row()
+                if (wide()) workspace.table { footer ->
+                    footer.add(ArchiveUi.text("HUBDUSTRY", 12f, LibraryTheme.muted)).left().growX()
+                    footer.add(ArchiveUi.text(caption("footer"), 12f, LibraryTheme.muted)).right()
+                }.width(available).padTop(10f)
+            }.grow()
         }
 
         private fun load() {
@@ -163,46 +206,71 @@ class LibraryBrowser {
         private fun rebuild() {
             clearImages()
             browserTable.clearChildren()
-            browserTable.top().left().margin(10f)
-            val available = (Core.graphics.width / Scl.scl(1f) - 52f).coerceIn(240f, 1280f)
-            cont.cells.forEach { it.maxWidth(available) }
-            cont.getCell(header).width(available)
-            cont.getCell(listing).width(available)
+            browserTable.top().left()
+            val available = contentWidth() - 8f
             status.setText(if (loading) "@loading" else Core.bundle.format("hubdustry.library.results", page.total))
             pageLabel.setText(if (page.total == 0) "0 / 0" else "${page.offset + 1}–${(page.offset + page.items.size).coerceAtMost(page.total)} / ${page.total}")
             if (loading) { browserTable.add("@loading", LibraryTheme.label()).pad(24f).center(); return }
             if (page.items.isEmpty()) { browserTable.add("@hubdustry.library.empty", LibraryTheme.label()).pad(24f).center(); return }
-            val cardWidth = if (kind == ContentKind.MAP) 310f else 250f
-            val columns = (available / (cardWidth + 12f)).toInt().coerceAtLeast(1)
-            val width = (available / columns - 12f).coerceAtMost(cardWidth)
-            val previewHeight = if (available < 600f) 128f else if (kind == ContentKind.MAP) 190f else width - 16f
             val token = generationAtOpen.get()
-            page.items.forEachIndexed { index, item ->
-                val card = Button(LibraryTheme.card()).apply { name = "library.card.${item.id}"; margin(0f); left() }
-                card.clicked { detail(item) }
-                val preview = Image(Tex.nomap)
-                preview.setScaling(arc.util.Scaling.fit)
-                card.add(preview).width(width - 16f).height(previewHeight).pad(8f).row()
-                card.table { labels ->
-                    labels.top().left()
-                    labels.add(item.name.replace("[", "[["), LibraryTheme.label(true, text = item.name)).fontScale(.8f).growX().ellipsis(true).left().row()
-                    item.attribution?.creditName?.let { labels.add(it.replace("[", "[["), LibraryTheme.label(color = LibraryTheme.muted, text = it)).fontScale(.85f).ellipsis(true).growX().left().row() }
-                    labels.table { ratings ->
-                        ratings.left()
-                        for (star in 1..5) ratings.image(TextureRegionDrawable(Icon.star.region)).size(12f).color(if (star <= (item.rank?.score ?: 0.0)) LibraryTheme.ink else LibraryTheme.line).padRight(2f)
-                        ratings.add("(${item.rank?.ratingCount ?: 0})", LibraryTheme.label(color = LibraryTheme.muted)).fontScale(.75f).padLeft(3f)
-                    }.left().row()
-                    labels.add("@hubdustry.library.tier.${(item.rank?.tier ?: RankTier.NEW).name.lowercase()}", LibraryTheme.label(color = LibraryTheme.muted)).fontScale(.8f).left()
-                    if (kind == ContentKind.MAP && item.width != null && item.height != null) {
-                        labels.row(); labels.add("${item.width} × ${item.height}", LibraryTheme.label(color = LibraryTheme.muted)).fontScale(.8f).left()
-                    }
-                }.width(width - 16f).growY().pad(6f)
-                browserTable.add(card).width(width).height(previewHeight + if (kind == ContentKind.MAP) 120f else 116f).pad(6f).left()
-                if ((index + 1) % columns == 0) browserTable.row()
-                thumbnail(item, "card:${item.id}", 256, { isShown && token == generationAtOpen.get() }) { texture ->
-                    preview.setDrawable(TextureRegionDrawable(arc.graphics.g2d.TextureRegion(texture)))
-                }
+            val featured = wide()
+            if (featured) {
+                browserTable.add(contentCard(page.items.first(), available, true, token)).width(available).height(320f).padBottom(24f).row()
             }
+            val remaining = if (featured) page.items.drop(1) else page.items
+            if (remaining.isEmpty()) return
+            if (featured) {
+                browserTable.table { divider ->
+                    divider.add(ArchiveUi.text("// " + caption("more"), 13f, LibraryTheme.muted)).left()
+                    divider.image(LibraryTheme.fill(LibraryTheme.line)).height(1f).growX().padLeft(18f)
+                }.width(available).padBottom(14f).row()
+            }
+            val columns = (available / 290f).toInt().coerceAtLeast(1)
+            val width = (available - (columns - 1) * 16f) / columns
+            browserTable.table { grid ->
+                grid.top().left()
+                remaining.forEachIndexed { index, item ->
+                    grid.add(contentCard(item, width, false, token)).width(width).height(if (wide()) 290f else 242f).padRight(if ((index + 1) % columns == 0) 0f else 16f).padBottom(16f)
+                    if ((index + 1) % columns == 0) grid.row()
+                }
+            }.width(available).left()
+        }
+
+        private fun contentCard(item: LibraryItem, width: Float, feature: Boolean, token: Long): Button {
+            val card = Button(ArchiveUi.card(feature)).apply { name = "library.card.${item.id}"; margin(0f); left() }
+            card.clicked { detail(item) }
+            val preview = Image(Tex.nomap).apply { setScaling(arc.util.Scaling.fit) }
+            val imageWidth = if (feature) width * .55f else width - 24f
+            card.add(preview).width(imageWidth).height(if (feature) 288f else if (wide()) 176f else 128f).pad(12f)
+            if (!feature) card.row()
+            card.table { labels ->
+                labels.top().left()
+                if (feature) {
+                    labels.add(ArchiveUi.text("// " + caption("focus") + "  /  001", 12f, LibraryTheme.yellow)).left().padBottom(16f).row()
+                }
+                val title = ArchiveUi.text(item.name.replace("[", "[["), if (feature) 34f else 23f, bold = true)
+                labels.add(title).growX().minWidth(0f).left().ellipsis(true).row()
+                item.attribution?.creditName?.let { labels.add(ArchiveUi.text(it.replace("[", "[["), 16f, LibraryTheme.muted)).ellipsis(true).growX().left().padTop(4f).row() }
+                if (feature && item.description.isNotBlank()) labels.add(ArchiveUi.text(item.description.take(160).replace("[", "[["), 16f, LibraryTheme.muted)).wrap().growX().left().padTop(14f).padBottom(10f).row()
+                labels.table { metadata ->
+                    metadata.left()
+                    metadata.add(ArchiveUi.text(Core.bundle.get("hubdustry.library.tier.${(item.rank?.tier ?: RankTier.NEW).name.lowercase()}"), 13f, LibraryTheme.yellow)).padRight(12f)
+                    item.rank?.let { metadata.add(ArchiveUi.text("${it.ratingCount} " + caption("ratings"), 13f, LibraryTheme.muted)) }
+                    if (item.width != null && item.height != null) metadata.add(ArchiveUi.text("${item.width} × ${item.height}", 13f, LibraryTheme.muted)).padLeft(12f)
+                }.left().padTop(8f).row()
+                if (feature) {
+                    labels.add().growY().row()
+                    labels.table { action ->
+                        action.background(ArchiveUi.panel(ArchiveUi.bone, ArchiveUi.bone, cut = true)).margin(12f)
+                        action.add(ArchiveUi.text(caption("open"), 16f, ArchiveUi.black, true)).left().growX()
+                        action.image(ArchiveUi.icon("next")).size(20f).color(ArchiveUi.black)
+                    }.growX().height(44f).padTop(16f)
+                }
+            }.width(if (feature) width - imageWidth - 60f else width - 28f).growY().pad(if (feature) 18f else 12f)
+            thumbnail(item, "card:${item.id}", if (feature) 512 else 256, { isShown && token == generationAtOpen.get() }) { texture ->
+                preview.setDrawable(TextureRegionDrawable(arc.graphics.g2d.TextureRegion(texture)))
+            }
+            return card
         }
 
         private fun clearImages() {
@@ -277,15 +345,15 @@ class LibraryBrowser {
             val preview = Image(Tex.nomap).apply { name = "library.detail.preview"; setScaling(arc.util.Scaling.fit) }
             body.add(preview).height((Core.graphics.height / Scl.scl(1f) * .42f).coerceIn(180f, 400f)).row()
             item.attribution?.creditName?.let { body.add(Core.bundle.get("hubdustry.library.author") + ": " + it.replace("[", "[[")).wrap().row() }
-            if (item.attribution?.identityVerified == true) body.add("@hubdustry.library.author-verified").color(Pal.accent).wrap().row()
+            if (item.attribution?.identityVerified == true) { body.add("@hubdustry.library.author-verified").wrap().get().name = "library.label.accent"; body.row() }
             body.add("@hubdustry.library.kind." + item.kind.name.lowercase()).row()
-            if (item.width != null && item.height != null) body.add("${item.width} × ${item.height}").color(Color.lightGray).row()
+            if (item.width != null && item.height != null) { body.add("${item.width} × ${item.height}").get().name = "library.label.secondary"; body.row() }
             item.rank?.let {
                 body.add(Core.bundle.get("hubdustry.library.tier." + it.tier.name.lowercase()) + " · " + Core.bundle.format("hubdustry.library.reviews", it.ratingCount)).row()
             }
             body.add(item.description.ifBlank { Core.bundle.get("hubdustry.library.no-description") }.replace("[", "[[")).wrap().row()
-            if (item.tags.isNotEmpty()) body.add(item.tags.joinToString(" · ").replace("[", "[[")).color(Color.lightGray).wrap().row()
-            item.attribution?.licenseNotice?.let { body.add(it.replace("[", "[[")).wrap().color(Color.lightGray).row() }
+            if (item.tags.isNotEmpty()) { body.add(item.tags.joinToString(" · ").replace("[", "[[")).wrap().get().name = "library.label.secondary"; body.row() }
+            item.attribution?.licenseNotice?.let { body.add(it.replace("[", "[[")).wrap().get().name = "library.label.secondary"; body.row() }
             if (item.capabilities.canRate && account.session != null) {
                 body.add("@hubdustry.library.rate").padTop(14f).row()
                 body.table { ratings ->

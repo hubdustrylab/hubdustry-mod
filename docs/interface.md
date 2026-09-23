@@ -1,37 +1,41 @@
-# Native interface
+# Native archive interface
 
-Hubdustry uses a dark industrial interface: quiet surfaces, strong pale type,
-square panels, thin rules and a yellow accent. Content previews carry the visual
-detail. The shared implementation is `LibraryTheme`; it owns only Hubdustry
-widget styles and fonts, without changing Mindustry's global style registry.
+Hubdustry owns its archive layout and components. `LibraryBrowser` composes a
+full-screen archive from `ArchiveUi` primitives; it does not inherit the game's
+mod-browser layout. `LibraryTheme` owns scoped fonts and control states without
+changing Mindustry's global style registry.
+
+The composition uses a pale navigation rail against a charcoal workspace, large
+display type, a yellow vertical spine, fine technical rules, grid-backed previews,
+cut corners and striped accents. Shapes are drawn natively without image assets
+or a web runtime. Native dialog transitions remain available.
 
 | Token | Value | Use |
 | --- | --- | --- |
-| Canvas | `#191919` | Dialog surface |
+| Canvas | `#191919` | Workspace |
 | Paper | `#1f1f1f` | Cards and search |
 | Ink | `#eeeeee` | Text and icons |
 | Muted | `#aaaaaa` | Secondary text |
-| Line | `#383838` | Secondary controls and separators |
-| Yellow | `#fffa00` | Primary actions and selected filters |
+| Line | `#383838` | Rules and controls |
+| Yellow | `#fffa00` | Active navigation and primary states |
 | Hover | `#30302c` | Pointer feedback |
-| On accent | `#191919` | Text and icons on yellow |
+| Bone | `#e7e7df` | Navigation and prominent actions |
+| Black | `#111313` | Text on pale surfaces and preview field |
+| Grid | `#292d2c` | Technical preview guides |
 
-Barlow Regular is the 20-unit body face; Barlow Bold supplies 28-unit headings.
-Sizes follow the game's UI scale. Vietnamese uses the bundled font; other scripts
-use the game's font for the whole label to keep glyph atlases consistent. Font
-files and their license ship in the JAR. Icons remain native Mindustry icons.
+Barlow Regular supplies 20-unit body text. Barlow Bold has separate 28-unit and
+72-unit atlases, so large headings stay sharp. Sizes follow the game's UI scale.
+Vietnamese uses the bundled font; unsupported scripts use the native game font
+for the whole label. Font files and their license ship in the JAR.
 
-Schematic Browser and Map Browser keep independent query and scroll state.
-Search, sort and pagination remain above the content grid. Schematics use square
-previews; maps use a wider card with dimensions. Detail, grouped filters and account
-actions open separate dialogs. Filters select the existing system catalog.
+Schematic and map archives retain independent query, filters, pagination and
+scroll state. At 900 units and above, a fixed navigation rail exposes both pages;
+the first query result occupies a prominent preview panel above the remaining
+collection. This presentation follows query ordering and does not invent an
+editorial endorsement or rating. Smaller screens use compact navigation and a
+responsive collection, reaching one column at phone widths.
 
-The content width is bounded at 1280 units; columns follow the available width.
-Controls use 40–64-unit targets and cards have 6-unit outer gutters. Native dialog
-footer overlays stay transparent, with reserved space below the scrolling viewport.
-Preview images
-keep their aspect ratio. Selected filters and primary actions use yellow with dark
-text; secondary controls remain neutral.
-Below 600 units, search tools and pagination move onto separate rows and the
-title badge contracts. Compact previews leave room for names and attribution on
-narrow screens.
+Search, filters, sort and pagination remain real controls. Images fit without
+cropping and map dimensions remain visible. Grouped filters, account actions
+and details use separate surfaces. Tags select the system catalog. The main
+archive has no floating footer over the results; Back is in the navigation.
