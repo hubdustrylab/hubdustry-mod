@@ -11,3 +11,5 @@ gradlew text eol=lf
 *.txt text eol=lf
 gradle/LICENSE text eol=lf
 *.jar binary
+# Preserve the upstream license verbatim, including its one trailing space.
+src/main/resources/META-INF/LICENSES/Barlow-OFL.txt whitespace=-blank-at-eol

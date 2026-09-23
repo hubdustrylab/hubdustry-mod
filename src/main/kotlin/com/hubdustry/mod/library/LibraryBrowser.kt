@@ -65,7 +65,6 @@ class LibraryBrowser {
 
         init {
             name = "library.browser.${kind.name}"
-            background(TextureRegionDrawable(Core.atlas.white()).tint(Color.valueOf("171b20")))
             title.setText(if (kind == ContentKind.MAP) "@hubdustry.library.maps" else "@hubdustry.library.schematics")
             header = cont.children.get(0) as Table
             listing = cont.children.get(1) as ScrollPane
@@ -75,18 +74,28 @@ class LibraryBrowser {
             search.name = "library.search"
             search.setMessageText(if (kind == ContentKind.MAP) "@hubdustry.library.search-maps" else "@hubdustry.library.search-schematics")
             search.setMaxLength(Bounds.MAX_TEXT)
-            header.clear()
-            header.add(zoom).padRight(8f)
-            header.add(search).growX().minWidth(0f)
-            header.button(Icon.filter, Styles.emptyi) {
+            zoom.setColor(LibraryTheme.ink)
+            val tools = Table()
+            tools.button(Icon.filter, Styles.emptyi) {
                 withCatalog { catalog ->
                     LibraryFilters(query, catalog, account.session != null) { next ->
                         query = next; listing.setScrollY(0f); load()
                     }.show()
                 }
             }.size(44f).tooltip("@hubdustry.library.filters").get().name = "library.filter"
-            header.button(Icon.refresh, Styles.emptyi) { load() }.size(44f).tooltip("@refresh").get().name = "library.refresh"
-            header.button(Icon.settings, Styles.emptyi) { accountDialog() }.size(44f).tooltip("@hubdustry.account").get().name = "library.account"
+            tools.button(Icon.refresh, Styles.emptyi) { load() }.size(44f).tooltip("@refresh").get().name = "library.refresh"
+            tools.button(Icon.settings, Styles.emptyi) { accountDialog() }.size(44f).tooltip("@hubdustry.account").get().name = "library.account"
+            fun layoutHeader() {
+                header.clear()
+                header.background(LibraryTheme.fill(LibraryTheme.paper)).margin(10f)
+                header.add(zoom).padRight(8f)
+                header.add(search).growX().minWidth(0f)
+                if (LibraryTheme.width() < 600f) {
+                    header.row()
+                    header.add(tools).colspan(2).right().padTop(6f)
+                } else header.add(tools)
+            }
+            layoutHeader()
             shown {
                 val token = generation.incrementAndGet().also { generationAtOpen.set(it) }
                 // Arc fires shown before attaching the dialog to its scene.
@@ -100,16 +109,28 @@ class LibraryBrowser {
                 generationAtOpen.set(generation.incrementAndGet()); detailGeneration.incrementAndGet()
             }
             cont.clear()
-            cont.top().add(header).growX().row()
-            cont.table { bar ->
-                val sort = bar.button("", Styles.defaultt, Runnable { sortDialog() }).height(44f).minWidth(200f).padRight(10f).get()
-                sort.update { sort.setText("@hubdustry.library.sort.${query.sort.name.lowercase()}") }
-                bar.add(status).growX().left()
-                bar.button(Icon.left, Styles.emptyi, Runnable { if (page.offset > 0) { query = query.copy(offset = (page.offset - query.limit).coerceAtLeast(0)); listing.setScrollY(0f); load() } }).size(40f)
-                bar.add(pageLabel).pad(6f)
-                bar.button(Icon.right, Styles.emptyi, Runnable { if (page.offset + page.items.size < page.total) { query = query.copy(offset = page.offset + query.limit); listing.setScrollY(0f); load() } }).size(40f)
-            }.growX().row()
+            // Keep the native overlay footer outside the scrolling viewport.
+            cont.top().marginBottom(84f).add(header).growX().padTop(14f).row()
+            val bar = Table()
+            val sort = bar.button("", Styles.defaultt, Runnable { sortDialog() }).get()
+            sort.update { sort.setText("@hubdustry.library.sort.${query.sort.name.lowercase()}") }
+            val navigation = Table()
+            navigation.button(Icon.left, Styles.emptyi, Runnable { if (page.offset > 0) { query = query.copy(offset = (page.offset - query.limit).coerceAtLeast(0)); listing.setScrollY(0f); load() } }).size(40f)
+            navigation.add(pageLabel).pad(6f)
+            navigation.button(Icon.right, Styles.emptyi, Runnable { if (page.offset + page.items.size < page.total) { query = query.copy(offset = page.offset + query.limit); listing.setScrollY(0f); load() } }).size(40f)
+            fun layoutBar() {
+                bar.clear()
+                if (LibraryTheme.width() < 600f) {
+                    bar.add(sort).colspan(2).growX().height(44f).padBottom(6f).row()
+                } else bar.add(sort).width(200f).height(44f).padRight(10f)
+                bar.add(status).growX().minWidth(0f).left()
+                bar.add(navigation).right()
+            }
+            layoutBar()
+            onResize { layoutHeader(); layoutBar() }
+            cont.add(bar).growX().padTop(10f).padBottom(8f).row()
             cont.add(listing).grow()
+            LibraryTheme.dialog(this, if (kind == ContentKind.MAP) "HUBDUSTRY / LIBRARY 02" else "HUBDUSTRY / LIBRARY 01")
         }
 
         override fun rebuildBrowser() {
@@ -142,40 +163,41 @@ class LibraryBrowser {
         private fun rebuild() {
             clearImages()
             browserTable.clearChildren()
-            browserTable.top().left().margin(10f).marginBottom(80f)
+            browserTable.top().left().margin(10f)
             val available = (Core.graphics.width / Scl.scl(1f) - 52f).coerceIn(240f, 1280f)
             cont.cells.forEach { it.maxWidth(available) }
             cont.getCell(header).width(available)
             cont.getCell(listing).width(available)
             status.setText(if (loading) "@loading" else Core.bundle.format("hubdustry.library.results", page.total))
             pageLabel.setText(if (page.total == 0) "0 / 0" else "${page.offset + 1}–${(page.offset + page.items.size).coerceAtMost(page.total)} / ${page.total}")
-            if (loading) { browserTable.add("@loading").center(); return }
-            if (page.items.isEmpty()) { browserTable.add("@hubdustry.library.empty").center(); return }
+            if (loading) { browserTable.add("@loading", LibraryTheme.label()).pad(24f).center(); return }
+            if (page.items.isEmpty()) { browserTable.add("@hubdustry.library.empty", LibraryTheme.label()).pad(24f).center(); return }
             val cardWidth = if (kind == ContentKind.MAP) 310f else 250f
             val columns = (available / (cardWidth + 12f)).toInt().coerceAtLeast(1)
             val width = (available / columns - 12f).coerceAtMost(cardWidth)
+            val previewHeight = if (available < 600f) 128f else if (kind == ContentKind.MAP) 190f else width - 16f
             val token = generationAtOpen.get()
             page.items.forEachIndexed { index, item ->
-                val card = Button(Styles.grayt).apply { name = "library.card.${item.id}"; margin(0f); left() }
+                val card = Button(LibraryTheme.card()).apply { name = "library.card.${item.id}"; margin(0f); left() }
                 card.clicked { detail(item) }
                 val preview = Image(Tex.nomap)
                 preview.setScaling(arc.util.Scaling.fit)
-                card.add(preview).width(width - 16f).height(if (kind == ContentKind.MAP) 190f else width - 16f).pad(8f).row()
+                card.add(preview).width(width - 16f).height(previewHeight).pad(8f).row()
                 card.table { labels ->
                     labels.top().left()
-                    labels.add(item.name.replace("[", "[[")).color(Pal.accent).growX().ellipsis(true).left().row()
-                    item.attribution?.creditName?.let { labels.add(it.replace("[", "[[")).color(Color.lightGray).ellipsis(true).growX().left().row() }
+                    labels.add(item.name.replace("[", "[["), LibraryTheme.label(true, text = item.name)).fontScale(.8f).growX().ellipsis(true).left().row()
+                    item.attribution?.creditName?.let { labels.add(it.replace("[", "[["), LibraryTheme.label(color = LibraryTheme.muted, text = it)).fontScale(.85f).ellipsis(true).growX().left().row() }
                     labels.table { ratings ->
                         ratings.left()
-                        for (star in 1..5) ratings.image(TextureRegionDrawable(Icon.star.region)).size(14f).color(if (star <= (item.rank?.score ?: 0.0)) Pal.accent else Color.lightGray).padRight(2f)
-                        ratings.add("(${item.rank?.ratingCount ?: 0})").color(Color.lightGray).padLeft(3f)
+                        for (star in 1..5) ratings.image(TextureRegionDrawable(Icon.star.region)).size(12f).color(if (star <= (item.rank?.score ?: 0.0)) LibraryTheme.ink else LibraryTheme.line).padRight(2f)
+                        ratings.add("(${item.rank?.ratingCount ?: 0})", LibraryTheme.label(color = LibraryTheme.muted)).fontScale(.75f).padLeft(3f)
                     }.left().row()
-                    labels.add("@hubdustry.library.tier.${(item.rank?.tier ?: RankTier.NEW).name.lowercase()}").color(Color.lightGray).left()
+                    labels.add("@hubdustry.library.tier.${(item.rank?.tier ?: RankTier.NEW).name.lowercase()}", LibraryTheme.label(color = LibraryTheme.muted)).fontScale(.8f).left()
                     if (kind == ContentKind.MAP && item.width != null && item.height != null) {
-                        labels.row(); labels.add("${item.width} × ${item.height}").color(Color.lightGray).left()
+                        labels.row(); labels.add("${item.width} × ${item.height}", LibraryTheme.label(color = LibraryTheme.muted)).fontScale(.8f).left()
                     }
                 }.width(width - 16f).growY().pad(6f)
-                browserTable.add(card).width(width).height(if (kind == ContentKind.MAP) 310f else width + 100f).pad(6f).left()
+                browserTable.add(card).width(width).height(previewHeight + if (kind == ContentKind.MAP) 120f else 116f).pad(6f).left()
                 if ((index + 1) % columns == 0) browserTable.row()
                 thumbnail(item, "card:${item.id}", 256, { isShown && token == generationAtOpen.get() }) { texture ->
                     preview.setDrawable(TextureRegionDrawable(arc.graphics.g2d.TextureRegion(texture)))
@@ -195,8 +217,9 @@ class LibraryBrowser {
             LibrarySort.values().forEach { sort ->
                 choices.cont.button("@hubdustry.library.sort.${sort.name.lowercase()}", Styles.squareTogglet, Runnable {
                     query = query.copy(sort = sort, offset = 0); choices.hide(); listing.setScrollY(0f); load()
-                }).width(280f).height(48f).pad(4f).checked(query.sort == sort).row()
+                }).width(280f).height(48f).pad(4f).checked(query.sort == sort).apply { get().name = "library.sort.choice.${sort.name}" }.row()
             }
+            LibraryTheme.dialog(choices, "HUBDUSTRY / SORT")
             choices.show()
         }
 
@@ -247,7 +270,6 @@ class LibraryBrowser {
         private fun detail(item: LibraryItem) {
             val detail = BaseDialog(item.name.replace("[", "[["))
             detail.name = "library.detail"
-            detail.background(TextureRegionDrawable(Core.atlas.white()).tint(Color.valueOf("171b20")))
             detail.setFillParent(true)
             detail.addCloseButton()
             val width = (Core.graphics.width / Scl.scl(1f) - 48f).coerceIn(240f, 680f)
@@ -287,6 +309,7 @@ class LibraryBrowser {
                     textures.remove(key)?.dispose()
                 }
             }
+            LibraryTheme.dialog(detail, "HUBDUSTRY / CONTENT")
             detail.show()
             thumbnail(item, key, 512, { detail.isShown && detailToken == detailGeneration.get() }) { texture ->
                 preview.setDrawable(TextureRegionDrawable(arc.graphics.g2d.TextureRegion(texture)))
@@ -308,6 +331,7 @@ class LibraryBrowser {
                 accountView.cont.button("@hubdustry.account.refresh", Icon.refresh) { accountView.hide(); accountButton() }.row()
                 accountView.cont.button("@hubdustry.account.logout") { account.logout(); accountView.hide(); query = query.copy(ownerMe = false, state = null, offset = 0); load() }.row()
             }
+            LibraryTheme.dialog(accountView, "HUBDUSTRY / ACCOUNT")
             accountView.show()
         }
 

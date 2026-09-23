@@ -13,3 +13,9 @@ Mindustry v160.2 is a compile-only game API dependency; Mindustry and Arc classe
 are not packaged in this mod. Their upstream licenses continue to apply to the
 game and its API artifacts. The Hubdustry license does not restrict rights in
 third-party components.
+
+Barlow Regular and Bold are bundled under the SIL Open Font License 1.1,
+Copyright 2017 The Barlow Project Authors (https://github.com/jpt/barlow).
+Unmodified font files are pinned to Google Fonts revision
+`e44c4b011a820c2cbe2fd2cfa8052037d7edb571`, directory `ofl/barlow`.
+The complete license is packaged at `META-INF/LICENSES/Barlow-OFL.txt`.

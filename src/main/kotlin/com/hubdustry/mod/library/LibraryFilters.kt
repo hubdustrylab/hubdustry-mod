@@ -23,10 +23,10 @@ class LibraryFilters(
     init {
         name = "library.filters"
         if (tagsOnly) title.setText("@hubdustry.library.tags")
-        background(arc.scene.style.TextureRegionDrawable(Core.atlas.white()).tint(arc.graphics.Color.valueOf("171b20")))
         setFillParent(true)
         addCloseButton()
         buttons.button("@hubdustry.library.apply", Icon.ok) { apply(draft.copy(offset = 0)); hide() }.size(180f, 64f).get().name = "library.filters.apply"
+        LibraryTheme.dialog(this, "HUBDUSTRY / FILTERS")
         shown { rebuild() }
         onResize { rebuild() }
     }
@@ -77,6 +77,7 @@ class LibraryFilters(
             section(form, "state", text("my-status"), states.table)
         }
         cont.pane(form).width(width()).growY().scrollX(false)
+        LibraryTheme.controls(cont)
     }
 
     private fun section(form: Table, id: String, label: String, choices: Table) {

@@ -36,6 +36,8 @@ Open **Settings → Hubdustry** to choose **Schematic browser** or **Map browser
 The two pages keep their own search, filters and position. Image cards open a
 separate detail page; grouped filters and account actions have separate dialogs.
 Tags are selections from the system catalog, not user-created labels.
+The [native interface guide](docs/interface.md) defines the shared colors,
+typography and component behavior.
 Network failures leave ordinary Mindustry gameplay available. Authentication,
 authoring and moderation controls appear only when the backend projects the
 corresponding capability.
