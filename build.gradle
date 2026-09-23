@@ -1,0 +1,108 @@
+plugins {
+    id 'org.jetbrains.kotlin.jvm' version '1.9.25'
+}
+
+group = 'com.hubdustry'
+version = '0.2.0'
+dependencyLocking { lockAllConfigurations() }
+
+// Compile with the installed JDK while emitting JVM 17-compatible bytecode.
+// CI may select an actual JDK 17 toolchain; local Windows hosts can use JDK 21.
+java { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
+
+sourceSets {
+    main { kotlin.srcDirs = ['src/main/kotlin']; resources.srcDirs = ['src/main/resources'] }
+    test { kotlin.srcDirs = ['src/test/kotlin']; resources.srcDirs = ['src/test/resources'] }
+}
+
+dependencies {
+    compileOnly 'Anuken:Mindustry:v160.2'
+    implementation 'org.jetbrains.kotlin:kotlin-stdlib:1.9.25'
+    testImplementation 'Anuken:Mindustry:v160.2'
+    testImplementation 'org.jetbrains.kotlin:kotlin-test:1.9.25'
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.11.3'
+}
+
+tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+    compilerOptions.jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17
+    kotlinOptions.freeCompilerArgs += ['-Xjdk-release=17']
+}
+tasks.withType(Test).configureEach { useJUnitPlatform() }
+
+jar {
+    archiveFileName = 'hubdustry-mod.jar'
+    preserveFileTimestamps = false
+    reproducibleFileOrder = true
+    manifest { attributes('Implementation-Version': project.version) }
+    from(['SOURCE-AVAILABLE-LICENSE.md', 'NOTICES.md']) { into 'META-INF' }
+    from(configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }) {
+        exclude 'META-INF/*.SF', 'META-INF/*.RSA', 'META-INF/*.DSA', 'META-INF/versions/**', 'module-info.class'
+    }
+}
+
+tasks.register('runtimeJarSmoke') {
+    dependsOn tasks.named('jar')
+    doLast {
+        def archive = zipTree(tasks.named('jar').get().archiveFile.get().asFile)
+        if (archive.matching { include 'kotlin/jvm/internal/Intrinsics.class' }.isEmpty()) throw new GradleException('fat JAR is missing Kotlin stdlib')
+        if (!archive.matching { include 'mindustry/**'; include 'arc/**' }.isEmpty()) throw new GradleException('fat JAR must not bundle Mindustry or Arc')
+        // Use only the packaged application and compile-only game API, without
+        // the Gradle/Kotlin plugin classpath concealing a missing runtime class.
+        def gameApi = configurations.compileClasspath.resolvedConfiguration.resolvedArtifacts.findAll {
+            it.moduleVersion.id.group == 'Anuken' && it.name == 'Mindustry'
+        }.collect { it.file }
+        if (gameApi.size() != 1) throw new GradleException('expected exactly one pinned game API artifact')
+        def urls = ([tasks.named('jar').get().archiveFile.get().asFile] + gameApi).collect { it.toURI().toURL() } as URL[]
+        new URLClassLoader(urls, (ClassLoader) null).withCloseable { loader ->
+            loader.loadClass('com.hubdustry.mod.HubdustryMod').getConstructor().newInstance()
+            loader.loadClass('com.hubdustry.mod.library.LibraryQuery').getConstructor().newInstance()
+        }
+    }
+}
+
+tasks.register('universalJar', Jar) {
+    dependsOn tasks.named('androidJar'), tasks.named('runtimeJarSmoke')
+    archiveFileName = "hubdustry-mod-${project.version}.jar"
+    destinationDirectory = layout.buildDirectory.dir('dist')
+    preserveFileTimestamps = false
+    reproducibleFileOrder = true
+    manifest { attributes('Implementation-Version': project.version) }
+    from({ zipTree(tasks.named('jar').get().archiveFile.get().asFile) }) { exclude 'META-INF/MANIFEST.MF' }
+    from(layout.buildDirectory.dir('android-dex')) { include 'classes*.dex' }
+}
+
+tasks.register('desktopJar', Copy) {
+    dependsOn tasks.named('runtimeJarSmoke')
+    from(tasks.named('jar'))
+    into(layout.buildDirectory.dir('dist'))
+    rename { 'hubdustry-mod-desktop.jar' }
+}
+
+tasks.register('androidJar') {
+    dependsOn tasks.named('jar')
+    def sdk = providers.environmentVariable('ANDROID_SDK_ROOT').orElse(
+        providers.environmentVariable('ANDROID_HOME').orElse(providers.environmentVariable('LOCALAPPDATA').map { it + '/Android/Sdk' }.orElse('')))
+    def output = layout.buildDirectory.file('dist/hubdustry-mod-android.jar')
+    doLast {
+        def sdkDir = file(sdk.get())
+        def d8Jar = new File(sdkDir, 'build-tools/35.0.0/lib/d8.jar')
+        def androidJar = new File(sdkDir, 'platforms/android-35/android.jar')
+        if (!d8Jar.isFile() || !androidJar.isFile()) {
+            throw new GradleException('androidJar requires Android build-tools 35.0.0 and android-35')
+        }
+        def sha256 = { File input -> input.bytes.with { java.security.MessageDigest.getInstance('SHA-256').digest(it) }.collect { String.format('%02x', it & 0xff) }.join() }
+        if (sha256(d8Jar) != '305622ad00535684534eb8f742cbf5e628a9abc09d8ea4d39d1babb95bf0cee5' || sha256(androidJar) != '4566663c3876e022b4fa4ced8c8697c4ab1688267f090114fd92d027b32e619b') {
+            throw new GradleException('Android D8/API inputs do not match pinned SHA-256 values')
+        }
+        def dexDir = layout.buildDirectory.dir('android-dex').get().asFile
+        delete dexDir
+        dexDir.mkdirs()
+        exec { commandLine 'java', '-cp', d8Jar.absolutePath, 'com.android.tools.r8.D8', '--lib', androidJar.absolutePath, '--min-api', '26', '--output', dexDir.absolutePath, tasks.named('jar').get().archiveFile.get().asFile.absolutePath }
+        def jarFile = output.get().asFile
+        jarFile.parentFile.mkdirs()
+        ant.jar(destfile: jarFile) {
+            zipfileset(src: tasks.named('jar').get().archiveFile.get().asFile, excludes: '**/*.class')
+            zipfileset(dir: dexDir, includes: 'classes*.dex')
+        }
+    }
+}

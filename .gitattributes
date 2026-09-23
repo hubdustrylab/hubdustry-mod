@@ -1,0 +1,13 @@
+* text=auto
+gradlew text eol=lf
+*.bat text eol=crlf
+*.kt text eol=lf
+*.gradle text eol=lf
+*.md text eol=lf
+*.json text eol=lf
+*.yml text eol=lf
+*.properties text eol=lf
+*.hjson text eol=lf
+*.txt text eol=lf
+gradle/LICENSE text eol=lf
+*.jar binary

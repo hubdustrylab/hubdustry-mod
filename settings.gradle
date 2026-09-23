@@ -1,0 +1,15 @@
+import org.gradle.api.initialization.resolve.RepositoriesMode
+
+pluginManagement { repositories { gradlePluginPortal(); mavenCentral() } }
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
+    repositories {
+        mavenCentral()
+        ivy {
+            url = uri('https://github.com')
+            patternLayout { artifact '/[organisation]/[module]/releases/download/[revision]/dependencies.jar' }
+            metadataSources { artifact() }
+        }
+    }
+}
+rootProject.name = 'hubdustry-mod'

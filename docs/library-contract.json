@@ -1,0 +1,4752 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Hubdustry public client API",
+    "version": "1"
+  },
+  "paths": {
+    "/v1/auth/pairings": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/ProtocolVersion"
+        },
+        {
+          "$ref": "#/components/parameters/ModVersion"
+        },
+        {
+          "$ref": "#/components/parameters/GameVersion"
+        },
+        {
+          "$ref": "#/components/parameters/Platform"
+        },
+        {
+          "$ref": "#/components/parameters/CorrelationId"
+        }
+      ],
+      "post": {
+        "operationId": "createPairing",
+        "tags": [
+          "Pairing"
+        ],
+        "security": [],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Pairing created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PairingCreated"
+                },
+                "examples": {
+                  "created": {
+                    "$ref": "#/components/examples/PairingCreated"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Malformed"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "426": {
+            "$ref": "#/components/responses/Incompatible"
+          },
+          "429": {
+            "$ref": "#/components/responses/Throttled"
+          }
+        }
+      }
+    },
+    "/v1/auth/pairings/{pairingId}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/PairingId"
+        },
+        {
+          "$ref": "#/components/parameters/ProtocolVersion"
+        },
+        {
+          "$ref": "#/components/parameters/ModVersion"
+        },
+        {
+          "$ref": "#/components/parameters/GameVersion"
+        },
+        {
+          "$ref": "#/components/parameters/Platform"
+        },
+        {
+          "$ref": "#/components/parameters/CorrelationId"
+        }
+      ],
+      "get": {
+        "operationId": "getPairingStatus",
+        "tags": [
+          "Pairing"
+        ],
+        "security": [
+          {
+            "pairingCollector": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Pairing status",
+            "headers": {
+              "Retry-After": {
+                "$ref": "#/components/headers/RetryAfter"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PairingStatus"
+                },
+                "examples": {
+                  "pending": {
+                    "$ref": "#/components/examples/PairingPending"
+                  },
+                  "authorized": {
+                    "$ref": "#/components/examples/PairingAuthorized"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/InvalidCollector"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "410": {
+            "$ref": "#/components/responses/Expired"
+          },
+          "422": {
+            "$ref": "#/components/responses/Denied"
+          },
+          "429": {
+            "$ref": "#/components/responses/Throttled"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "cancelPairing",
+        "tags": [
+          "Pairing"
+        ],
+        "security": [
+          {
+            "pairingCollector": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Pairing cancelled"
+          },
+          "401": {
+            "$ref": "#/components/responses/InvalidCollector"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "410": {
+            "$ref": "#/components/responses/Expired"
+          }
+        }
+      }
+    },
+    "/v1/auth/pairings/{pairingId}/collect": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/PairingId"
+        },
+        {
+          "$ref": "#/components/parameters/ProtocolVersion"
+        },
+        {
+          "$ref": "#/components/parameters/ModVersion"
+        },
+        {
+          "$ref": "#/components/parameters/GameVersion"
+        },
+        {
+          "$ref": "#/components/parameters/Platform"
+        },
+        {
+          "$ref": "#/components/parameters/CorrelationId"
+        }
+      ],
+      "post": {
+        "operationId": "collectPairing",
+        "tags": [
+          "Pairing"
+        ],
+        "security": [
+          {
+            "pairingCollector": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Single-use session result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionIssued"
+                },
+                "examples": {
+                  "issued": {
+                    "$ref": "#/components/examples/SessionIssued"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/InvalidCollector"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/NotReady"
+          },
+          "410": {
+            "$ref": "#/components/responses/Expired"
+          },
+          "422": {
+            "$ref": "#/components/responses/Denied"
+          }
+        }
+      }
+    },
+    "/v1/auth/sessions/refresh": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/ProtocolVersion"
+        },
+        {
+          "$ref": "#/components/parameters/ModVersion"
+        },
+        {
+          "$ref": "#/components/parameters/GameVersion"
+        },
+        {
+          "$ref": "#/components/parameters/Platform"
+        },
+        {
+          "$ref": "#/components/parameters/CorrelationId"
+        }
+      ],
+      "post": {
+        "operationId": "refreshSession",
+        "tags": [
+          "Session"
+        ],
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Rotated credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionIssued"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Malformed"
+          },
+          "401": {
+            "$ref": "#/components/responses/InvalidSession"
+          },
+          "409": {
+            "$ref": "#/components/responses/RefreshReplay"
+          },
+          "429": {
+            "$ref": "#/components/responses/Throttled"
+          }
+        }
+      }
+    },
+    "/v1/auth/sessions/current": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/ProtocolVersion"
+        },
+        {
+          "$ref": "#/components/parameters/ModVersion"
+        },
+        {
+          "$ref": "#/components/parameters/GameVersion"
+        },
+        {
+          "$ref": "#/components/parameters/Platform"
+        },
+        {
+          "$ref": "#/components/parameters/CorrelationId"
+        }
+      ],
+      "get": {
+        "operationId": "getCurrentSession",
+        "tags": [
+          "Session"
+        ],
+        "security": [
+          {
+            "hubdustryAccess": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Current account",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Account"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/ExpiredAccess"
+          },
+          "403": {
+            "$ref": "#/components/responses/Revoked"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "logout",
+        "tags": [
+          "Session"
+        ],
+        "security": [
+          {
+            "hubdustryAccess": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Current device session revoked"
+          },
+          "401": {
+            "$ref": "#/components/responses/InvalidSession"
+          },
+          "403": {
+            "$ref": "#/components/responses/Revoked"
+          }
+        }
+      }
+    },
+    "/v1/library/capabilities": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/ProtocolVersion"
+        },
+        {
+          "$ref": "#/components/parameters/ModVersion"
+        },
+        {
+          "$ref": "#/components/parameters/GameVersion"
+        },
+        {
+          "$ref": "#/components/parameters/Platform"
+        },
+        {
+          "$ref": "#/components/parameters/CorrelationId"
+        }
+      ],
+      "get": {
+        "operationId": "libraryCapabilities",
+        "tags": [
+          "Library"
+        ],
+        "security": [
+          {},
+          {
+            "hubdustryAccess": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Server-confirmed result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryCapabilities"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid bounded input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Capability denied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Missing or inaccessible item",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "Bounded library request or integrity failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Stale revision, mismatched idempotency key or preview not ready",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "Bounded library request or integrity failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Bounded library request or integrity failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Bounded library request or integrity failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "426": {
+            "description": "Bounded library request or integrity failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Write limit reached",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/library/context": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/ProtocolVersion"
+        },
+        {
+          "$ref": "#/components/parameters/ModVersion"
+        },
+        {
+          "$ref": "#/components/parameters/GameVersion"
+        },
+        {
+          "$ref": "#/components/parameters/Platform"
+        },
+        {
+          "$ref": "#/components/parameters/CorrelationId"
+        },
+        {
+          "name": "itemId",
+          "in": "query",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^li_[a-zA-Z0-9_-]{16,64}$",
+            "maxLength": 67
+          }
+        }
+      ],
+      "get": {
+        "operationId": "libraryContext",
+        "tags": [
+          "Library"
+        ],
+        "security": [
+          {},
+          {
+            "hubdustryAccess": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Server-confirmed result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryContext"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid bounded input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Capability denied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Missing or inaccessible item",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "Bounded library request or integrity failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Stale revision, mismatched idempotency key or preview not ready",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "Bounded library request or integrity failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Bounded library request or integrity failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Bounded library request or integrity failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "426": {
+            "description": "Bounded library request or integrity failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Write limit reached",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/library/items": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/ProtocolVersion"
+        },
+        {
+          "$ref": "#/components/parameters/ModVersion"
+        },
+        {
+          "$ref": "#/components/parameters/GameVersion"
+        },
+        {
+          "$ref": "#/components/parameters/Platform"
+        },
+        {
+          "$ref": "#/components/parameters/CorrelationId"
+        }
+      ],
+      "get": {
+        "operationId": "libraryList",
+        "tags": [
+          "Library"
+        ],
+        "security": [
+          {},
+          {
+            "hubdustryAccess": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Server-confirmed result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryPage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid bounded input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Capability denied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Missing or inaccessible item",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "Bounded library request or integrity failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Stale revision, mismatched idempotency key or preview not ready",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "Bounded library request or integrity failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Bounded library request or integrity failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Bounded library request or integrity failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "426": {
+            "description": "Bounded library request or integrity failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Write limit reached",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "kind",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/LibraryKind"
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 160
+            }
+          },
+          {
+            "name": "tags",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 588
+            }
+          },
+          {
+            "name": "owner",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "state",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/LibraryState"
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "recommended",
+                "recent",
+                "oldest",
+                "name"
+              ],
+              "default": "recommended"
+            }
+          },
+          {
+            "name": "minRank",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/LibraryTier"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 10000
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50
+            }
+          }
+        ]
+      },
+      "post": {
+        "operationId": "libraryCreate",
+        "tags": [
+          "Library"
+        ],
+        "security": [
+          {
+            "hubdustryAccess": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LibraryCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Server-confirmed result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryItem"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid bounded input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Capability denied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Missing or inaccessible item",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "Bounded library request or integrity failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Stale revision, mismatched idempotency key or preview not ready",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "Bounded library request or integrity failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Bounded library request or integrity failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Bounded library request or integrity failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "426": {
+            "description": "Bounded library request or integrity failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Write limit reached",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/library/items/{itemId}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/ProtocolVersion"
+        },
+        {
+          "$ref": "#/components/parameters/ModVersion"
+        },
+        {
+          "$ref": "#/components/parameters/GameVersion"
+        },
+        {
+          "$ref": "#/components/parameters/Platform"
+        },
+        {
+          "$ref": "#/components/parameters/CorrelationId"
+        },
+        {
+          "name": "itemId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^li_[a-zA-Z0-9_-]{16,64}$",
+            "maxLength": 67
+          }
+        }
+      ],
+      "get": {
+        "operationId": "libraryItem",
+        "tags": [
+          "Library"
+        ],
+        "security": [
+          {},
+          {
+            "hubdustryAccess": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Server-confirmed result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryItem"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid bounded input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Capability denied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Missing or inaccessible item",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "Bounded library request or integrity failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Stale revision, mismatched idempotency key or preview not ready",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "Bounded library request or integrity failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Bounded library request or integrity failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Bounded library request or integrity failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "426": {
+            "description": "Bounded library request or integrity failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Write limit reached",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "operationId": "libraryEdit",
+        "tags": [
+          "Library"
+        ],
+        "security": [
+          {
+            "hubdustryAccess": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LibraryEdit"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Server-confirmed result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryItem"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid bounded input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Capability denied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Missing or inaccessible item",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "Bounded library request or integrity failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Stale revision, mismatched idempotency key or preview not ready",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "Bounded library request or integrity failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Bounded library request or integrity failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Bounded library request or integrity failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "426": {
+            "description": "Bounded library request or integrity failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Write limit reached",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/library/items/{itemId}/submit": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/ProtocolVersion"
+        },
+        {
+          "$ref": "#/components/parameters/ModVersion"
+        },
+        {
+          "$ref": "#/components/parameters/GameVersion"
+        },
+        {
+          "$ref": "#/components/parameters/Platform"
+        },
+        {
+          "$ref": "#/components/parameters/CorrelationId"
+        },
+        {
+          "name": "itemId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^li_[a-zA-Z0-9_-]{16,64}$",
+            "maxLength": 67
+          }
+        }
+      ],
+      "post": {
+        "operationId": "librarysubmit",
+        "tags": [
+          "Library"
+        ],
+        "security": [
+          {
+            "hubdustryAccess": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LibraryRevision"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Server-confirmed result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryItem"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid bounded input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Capability denied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Missing or inaccessible item",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "Bounded library request or integrity failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Stale revision, mismatched idempotency key or preview not ready",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "Bounded library request or integrity failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Bounded library request or integrity failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Bounded library request or integrity failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "426": {
+            "description": "Bounded library request or integrity failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Write limit reached",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/library/items/{itemId}/moderate": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/ProtocolVersion"
+        },
+        {
+          "$ref": "#/components/parameters/ModVersion"
+        },
+        {
+          "$ref": "#/components/parameters/GameVersion"
+        },
+        {
+          "$ref": "#/components/parameters/Platform"
+        },
+        {
+          "$ref": "#/components/parameters/CorrelationId"
+        },
+        {
+          "name": "itemId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^li_[a-zA-Z0-9_-]{16,64}$",
+            "maxLength": 67
+          }
+        }
+      ],
+      "post": {
+        "operationId": "librarymoderate",
+        "tags": [
+          "Library"
+        ],
+        "security": [
+          {
+            "hubdustryAccess": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LibraryModerate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Server-confirmed result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryItem"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid bounded input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Capability denied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Missing or inaccessible item",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "Bounded library request or integrity failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Stale revision, mismatched idempotency key or preview not ready",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "Bounded library request or integrity failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Bounded library request or integrity failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Bounded library request or integrity failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "426": {
+            "description": "Bounded library request or integrity failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Write limit reached",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/library/items/{itemId}/rating": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/ProtocolVersion"
+        },
+        {
+          "$ref": "#/components/parameters/ModVersion"
+        },
+        {
+          "$ref": "#/components/parameters/GameVersion"
+        },
+        {
+          "$ref": "#/components/parameters/Platform"
+        },
+        {
+          "$ref": "#/components/parameters/CorrelationId"
+        },
+        {
+          "name": "itemId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^li_[a-zA-Z0-9_-]{16,64}$",
+            "maxLength": 67
+          }
+        }
+      ],
+      "post": {
+        "operationId": "libraryrating",
+        "tags": [
+          "Library"
+        ],
+        "security": [
+          {
+            "hubdustryAccess": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LibraryRating"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Server-confirmed result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryItem"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid bounded input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Capability denied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Missing or inaccessible item",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "Bounded library request or integrity failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Stale revision, mismatched idempotency key or preview not ready",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "Bounded library request or integrity failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Bounded library request or integrity failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Bounded library request or integrity failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "426": {
+            "description": "Bounded library request or integrity failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Write limit reached",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/library/items/{itemId}/attribution/import": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/ProtocolVersion"
+        },
+        {
+          "$ref": "#/components/parameters/ModVersion"
+        },
+        {
+          "$ref": "#/components/parameters/GameVersion"
+        },
+        {
+          "$ref": "#/components/parameters/Platform"
+        },
+        {
+          "$ref": "#/components/parameters/CorrelationId"
+        },
+        {
+          "name": "itemId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^li_[a-zA-Z0-9_-]{16,64}$",
+            "maxLength": 67
+          }
+        }
+      ],
+      "post": {
+        "operationId": "libraryattribution_import",
+        "tags": [
+          "Library"
+        ],
+        "security": [
+          {
+            "hubdustryAccess": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LibraryImportAttribution"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Server-confirmed result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryItem"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid bounded input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Capability denied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Missing or inaccessible item",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "Bounded library request or integrity failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Stale revision, mismatched idempotency key or preview not ready",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "Bounded library request or integrity failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Bounded library request or integrity failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Bounded library request or integrity failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "426": {
+            "description": "Bounded library request or integrity failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Write limit reached",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/library/roles": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/ProtocolVersion"
+        },
+        {
+          "$ref": "#/components/parameters/ModVersion"
+        },
+        {
+          "$ref": "#/components/parameters/GameVersion"
+        },
+        {
+          "$ref": "#/components/parameters/Platform"
+        },
+        {
+          "$ref": "#/components/parameters/CorrelationId"
+        }
+      ],
+      "get": {
+        "operationId": "libraryRoles",
+        "tags": [
+          "Library"
+        ],
+        "security": [
+          {
+            "hubdustryAccess": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Server-confirmed result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryRoles"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid bounded input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Capability denied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Missing or inaccessible item",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "Bounded library request or integrity failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Stale revision, mismatched idempotency key or preview not ready",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "Bounded library request or integrity failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Bounded library request or integrity failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Bounded library request or integrity failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "426": {
+            "description": "Bounded library request or integrity failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Write limit reached",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "libraryGrantRole",
+        "tags": [
+          "Library"
+        ],
+        "security": [
+          {
+            "hubdustryAccess": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LibraryRoleGrant"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Server-confirmed result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryRoleGrant"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid bounded input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Capability denied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Missing or inaccessible item",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "Bounded library request or integrity failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Stale revision, mismatched idempotency key or preview not ready",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "Bounded library request or integrity failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Bounded library request or integrity failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Bounded library request or integrity failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "426": {
+            "description": "Bounded library request or integrity failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Write limit reached",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/library/uploads": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/ProtocolVersion"
+        },
+        {
+          "$ref": "#/components/parameters/ModVersion"
+        },
+        {
+          "$ref": "#/components/parameters/GameVersion"
+        },
+        {
+          "$ref": "#/components/parameters/Platform"
+        },
+        {
+          "$ref": "#/components/parameters/CorrelationId"
+        }
+      ],
+      "post": {
+        "operationId": "libraryUpload",
+        "tags": [
+          "Library"
+        ],
+        "security": [
+          {
+            "hubdustryAccess": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Server-confirmed result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryUpload"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid bounded input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Capability denied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Missing or inaccessible item",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "Bounded library request or integrity failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Stale revision, mismatched idempotency key or preview not ready",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "Bounded library request or integrity failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Bounded library request or integrity failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Bounded library request or integrity failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "426": {
+            "description": "Bounded library request or integrity failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Write limit reached",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "kind",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/LibraryKind"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/octet-stream": {
+              "schema": {
+                "type": "string",
+                "format": "binary",
+                "maxLength": 3000000
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/library/items/{itemId}/source": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/ProtocolVersion"
+        },
+        {
+          "$ref": "#/components/parameters/ModVersion"
+        },
+        {
+          "$ref": "#/components/parameters/GameVersion"
+        },
+        {
+          "$ref": "#/components/parameters/Platform"
+        },
+        {
+          "$ref": "#/components/parameters/CorrelationId"
+        },
+        {
+          "name": "itemId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^li_[a-zA-Z0-9_-]{16,64}$",
+            "maxLength": 67
+          }
+        }
+      ],
+      "get": {
+        "operationId": "librarysource",
+        "tags": [
+          "Library"
+        ],
+        "security": [
+          {},
+          {
+            "hubdustryAccess": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Current-access checked immutable bytes",
+            "headers": {
+              "X-Content-SHA256": {
+                "schema": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                }
+              },
+              "Content-Length": {
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991
+                }
+              },
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "const": "private, no-store"
+                }
+              }
+            },
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid bounded input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Capability denied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Missing or inaccessible item",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "Bounded library request or integrity failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Stale revision, mismatched idempotency key or preview not ready",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "Bounded library request or integrity failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Bounded library request or integrity failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Bounded library request or integrity failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "426": {
+            "description": "Bounded library request or integrity failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Write limit reached",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/library/items/{itemId}/image": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/ProtocolVersion"
+        },
+        {
+          "$ref": "#/components/parameters/ModVersion"
+        },
+        {
+          "$ref": "#/components/parameters/GameVersion"
+        },
+        {
+          "$ref": "#/components/parameters/Platform"
+        },
+        {
+          "$ref": "#/components/parameters/CorrelationId"
+        },
+        {
+          "name": "itemId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^li_[a-zA-Z0-9_-]{16,64}$",
+            "maxLength": 67
+          }
+        }
+      ],
+      "get": {
+        "operationId": "libraryimage",
+        "tags": [
+          "Library"
+        ],
+        "security": [
+          {},
+          {
+            "hubdustryAccess": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Current-access checked immutable bytes",
+            "headers": {
+              "X-Content-SHA256": {
+                "schema": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                }
+              },
+              "Content-Length": {
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991
+                }
+              },
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "const": "private, no-store"
+                }
+              }
+            },
+            "content": {
+              "image/png": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid bounded input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Capability denied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Missing or inaccessible item",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "Bounded library request or integrity failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Stale revision, mismatched idempotency key or preview not ready",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "Bounded library request or integrity failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Bounded library request or integrity failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Bounded library request or integrity failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "426": {
+            "description": "Bounded library request or integrity failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Write limit reached",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/library/items/{itemId}/edit": {
+      "post": {
+        "operationId": "postLibraryItemEdit",
+        "tags": [
+          "Library"
+        ],
+        "security": [
+          {
+            "hubdustryAccess": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LibraryEdit"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Server-confirmed result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryItem"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid bounded input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Capability denied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Missing or inaccessible item",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "Bounded library request or integrity failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Stale revision, mismatched idempotency key or preview not ready",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "Bounded library request or integrity failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Bounded library request or integrity failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Bounded library request or integrity failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "426": {
+            "description": "Bounded library request or integrity failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Write limit reached",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryError"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Edit library metadata using the portable command transport"
+      },
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/ProtocolVersion"
+        },
+        {
+          "$ref": "#/components/parameters/ModVersion"
+        },
+        {
+          "$ref": "#/components/parameters/GameVersion"
+        },
+        {
+          "$ref": "#/components/parameters/Platform"
+        },
+        {
+          "$ref": "#/components/parameters/CorrelationId"
+        },
+        {
+          "name": "itemId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^li_[a-zA-Z0-9_-]{16,64}$",
+            "maxLength": 67
+          }
+        }
+      ]
+    }
+  },
+  "components": {
+    "parameters": {
+      "CorrelationId": {
+        "name": "X-Correlation-Id",
+        "in": "header",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "pattern": "^corr_[A-Za-z0-9_-]{16,128}$"
+        }
+      },
+      "Platform": {
+        "name": "X-Hubdustry-Platform",
+        "in": "header",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "enum": [
+            "desktop",
+            "android",
+            "ios",
+            "server"
+          ]
+        }
+      },
+      "GameVersion": {
+        "name": "X-Hubdustry-Game-Version",
+        "in": "header",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        }
+      },
+      "ModVersion": {
+        "name": "X-Hubdustry-Mod-Version",
+        "in": "header",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        }
+      },
+      "ProtocolVersion": {
+        "name": "X-Hubdustry-Protocol",
+        "in": "header",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "const": "1"
+        }
+      },
+      "PairingId": {
+        "name": "pairingId",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "pattern": "^hp_[A-Za-z0-9_-]{32,128}$"
+        }
+      },
+      "IdempotencyKey": {
+        "name": "Idempotency-Key",
+        "in": "header",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "minLength": 16,
+          "maxLength": 128
+        }
+      }
+    },
+    "schemas": {
+      "LibraryError": {
+        "type": "object",
+        "required": [
+          "error",
+          "correlationId"
+        ],
+        "properties": {
+          "error": {
+            "type": "object",
+            "required": [
+              "code",
+              "retryable"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "enum": [
+                  "MALFORMED_REQUEST",
+                  "INCOMPATIBLE_PROTOCOL",
+                  "INVALID_SIGNATURE",
+                  "FINGERPRINT_MISMATCH",
+                  "UNCONFIRMED_HOST",
+                  "EXPIRED_INVITATION",
+                  "STALE_ROOM_EPOCH",
+                  "REPLAYED_NONCE",
+                  "REPLAY_CHECK_DEFERRED",
+                  "PROTOCOL_MISMATCH",
+                  "UNSUPPORTED_CRYPTO",
+                  "UNSUPPORTED_NETWORK",
+                  "RENDEZVOUS_UNAVAILABLE",
+                  "RENDEZVOUS_DEFERRED",
+                  "DIRECT_TIMEOUT",
+                  "RELAY_UNAVAILABLE",
+                  "RELAY_QUOTA_EXCEEDED",
+                  "FAILED_NO_RELAY",
+                  "PATH_LOST",
+                  "REJECTED_BACKPRESSURE",
+                  "DROPPED_UNRELIABLE",
+                  "RELIABLE_GAP",
+                  "REJECTED_REORDER_BUFFER",
+                  "REPLAY_BUDGET_EXCEEDED",
+                  "INVITATION_TOO_LARGE",
+                  "TICKET_HASH_MISMATCH",
+                  "RENDEZVOUS_KEY_MISMATCH",
+                  "CANCELLED",
+                  "CLOSED",
+                  "INVALID_COLLECTOR",
+                  "PAIRING_NOT_READY",
+                  "PAIRING_DENIED",
+                  "PAIRING_EXPIRED",
+                  "PAIRING_CANCELLED",
+                  "PAIRING_CONSUMED",
+                  "INVALID_SESSION",
+                  "INVALID_PROVIDER_CREDENTIAL",
+                  "ACCESS_EXPIRED",
+                  "SESSION_REVOKED",
+                  "REFRESH_REPLAY",
+                  "THROTTLED",
+                  "NOT_FOUND",
+                  "CONFLICT",
+                  "SERVICE_UNAVAILABLE",
+                  "INVALID_INPUT",
+                  "UNSUPPORTED_CAPSULE",
+                  "RESOURCE_LIMIT",
+                  "PROVIDER_LOST",
+                  "INVALID_OUTPUT",
+                  "POLICY_DENIED",
+                  "EXPIRED",
+                  "ARTIFACT_REVOKED",
+                  "INTERNAL_FAILURE",
+                  "STALE_ATTEMPT",
+                  "RESULT_CONFLICT",
+                  "INVALID_STATE",
+                  "REVISION_CONFLICT",
+                  "IDEMPOTENCY_CONFLICT",
+                  "PREVIEW_NOT_READY",
+                  "PREVIEW_MISMATCH",
+                  "SELF_RATING_DENIED",
+                  "CONTENT_ALREADY_EXISTS",
+                  "SOURCE_ALREADY_IMPORTED",
+                  "IMMUTABLE_ATTRIBUTION",
+                  "DIGEST_MISMATCH",
+                  "UNSUPPORTED_CONTENT_TYPE",
+                  "METHOD_NOT_ALLOWED"
+                ]
+              },
+              "retryable": {
+                "type": "boolean"
+              },
+              "retryAfterSeconds": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 300
+              }
+            },
+            "additionalProperties": false
+          },
+          "correlationId": {
+            "type": "string",
+            "pattern": "^corr_[A-Za-z0-9_-]{16,128}$"
+          }
+        },
+        "additionalProperties": false
+      },
+      "LibraryItem": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^li_[a-f0-9]{32}$",
+            "maxLength": 35
+          },
+          "kind": {
+            "$ref": "#/components/schemas/LibraryKind"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 8000
+          },
+          "tags": {
+            "type": "array",
+            "maxItems": 12,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 48
+            }
+          },
+          "ownerId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "uploaderId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "state": {
+            "$ref": "#/components/schemas/LibraryState"
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "sizeBytes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 3000000
+          },
+          "assetId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "previewRequestId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "artifactId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "width": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 65535
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "height": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 65535
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "createdAt": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "updatedAt": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "rank": {
+            "$ref": "#/components/schemas/LibraryRank"
+          },
+          "attribution": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LibraryAttribution"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "capabilities": {
+            "type": "array",
+            "maxItems": 16,
+            "items": {
+              "type": "string",
+              "maxLength": 64
+            }
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "name",
+          "description",
+          "tags",
+          "ownerId",
+          "uploaderId",
+          "revision",
+          "state",
+          "sha256",
+          "sizeBytes",
+          "assetId",
+          "previewRequestId",
+          "artifactId",
+          "width",
+          "height",
+          "createdAt",
+          "updatedAt",
+          "rank",
+          "attribution",
+          "capabilities"
+        ]
+      },
+      "LibraryAttribution": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "creditName": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 160
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "sourceUrl": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 2048,
+                "format": "uri"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "createdAt": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "verified": {
+            "type": "boolean",
+            "const": false
+          },
+          "authorId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "identityVerified": {
+            "type": "boolean"
+          },
+          "licenseNotice": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 16000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "creditName",
+          "sourceUrl",
+          "createdAt",
+          "verified",
+          "authorId",
+          "identityVerified",
+          "licenseNotice"
+        ]
+      },
+      "LibraryRank": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "score": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 5
+          },
+          "tier": {
+            "$ref": "#/components/schemas/LibraryTier"
+          },
+          "ratingCount": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "expertCount": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "version": {
+            "type": "string",
+            "const": "library-rank-v1"
+          }
+        },
+        "required": [
+          "score",
+          "tier",
+          "ratingCount",
+          "expertCount",
+          "version"
+        ]
+      },
+      "LibraryTier": {
+        "type": "string",
+        "enum": [
+          "NEW",
+          "COMMUNITY",
+          "QUALITY",
+          "EXCELLENT"
+        ]
+      },
+      "LibraryState": {
+        "type": "string",
+        "enum": [
+          "DRAFT",
+          "PUBLISHED",
+          "HIDDEN",
+          "ARCHIVED"
+        ]
+      },
+      "LibraryKind": {
+        "type": "string",
+        "enum": [
+          "SCHEMATIC",
+          "MAP"
+        ]
+      },
+      "LibraryEdit": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "revision": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 8000
+          },
+          "tags": {
+            "type": "array",
+            "maxItems": 12,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 48
+            }
+          },
+          "attribution": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LibraryAttributionClaim"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "revision",
+          "name",
+          "description",
+          "tags"
+        ]
+      },
+      "LibraryAttributionClaim": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "creditName": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 160
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "sourceUrl": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 2048,
+                "format": "uri"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "createdAt": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": []
+      },
+      "LibraryUpload": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "assetId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "previewRequestId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "kind": {
+            "$ref": "#/components/schemas/LibraryKind"
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "sizeBytes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 3000000
+          }
+        },
+        "required": [
+          "assetId",
+          "previewRequestId",
+          "kind",
+          "sha256",
+          "sizeBytes"
+        ]
+      },
+      "LibraryRoleGrant": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "accountId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "role": {
+            "$ref": "#/components/schemas/LibraryRole"
+          }
+        },
+        "required": [
+          "accountId",
+          "role"
+        ]
+      },
+      "LibraryRole": {
+        "type": "string",
+        "enum": [
+          "MEMBER",
+          "EXPERT",
+          "CURATOR",
+          "ADMIN"
+        ]
+      },
+      "LibraryRoles": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "roles": {
+            "type": "array",
+            "maxItems": 1000,
+            "items": {
+              "$ref": "#/components/schemas/LibraryRoleGrant"
+            }
+          }
+        },
+        "required": [
+          "roles"
+        ]
+      },
+      "LibraryImportAttribution": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "revision": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "sourceRepository": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$",
+            "maxLength": 200
+          },
+          "sourceRevision": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{40}$"
+          },
+          "sourcePath": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512
+          },
+          "sourceSha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "creditName": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          },
+          "discordUserId": {
+            "type": "string",
+            "pattern": "^[1-9][0-9]{16,19}$"
+          },
+          "sourceLicense": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 16000
+          },
+          "publish": {
+            "type": "boolean",
+            "default": false,
+            "description": "Atomically publish after valid preview evidence, without waiting for the credited author to sign in."
+          }
+        },
+        "required": [
+          "revision",
+          "sourceRepository",
+          "sourceRevision",
+          "sourcePath",
+          "sourceSha256",
+          "creditName",
+          "discordUserId",
+          "sourceLicense"
+        ]
+      },
+      "LibraryRating": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "score": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 5
+          }
+        },
+        "required": [
+          "score"
+        ]
+      },
+      "LibraryModerate": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "revision": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "decision": {
+            "type": "string",
+            "enum": [
+              "HIDE",
+              "RESTORE"
+            ]
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000
+          }
+        },
+        "required": [
+          "revision",
+          "decision",
+          "reason"
+        ]
+      },
+      "LibraryRevision": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "revision": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "revision"
+        ]
+      },
+      "LibraryCreate": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "assetId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "previewRequestId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 8000
+          },
+          "tags": {
+            "type": "array",
+            "maxItems": 12,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 48
+            }
+          },
+          "attribution": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LibraryAttributionClaim"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "assetId",
+          "previewRequestId",
+          "name",
+          "description",
+          "tags"
+        ]
+      },
+      "LibraryPage": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "type": "array",
+            "maxItems": 50,
+            "items": {
+              "$ref": "#/components/schemas/LibraryItem"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 10000
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 50
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "offset",
+          "limit"
+        ]
+      },
+      "LibraryContext": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "item": {
+            "$ref": "#/components/schemas/LibraryItem"
+          },
+          "capabilities": {
+            "type": "array",
+            "maxItems": 16,
+            "items": {
+              "$ref": "#/components/schemas/LibraryCapability"
+            }
+          },
+          "receipts": {
+            "type": "array",
+            "maxItems": 20,
+            "items": {
+              "$ref": "#/components/schemas/LibraryReceipt"
+            }
+          }
+        },
+        "required": [
+          "item",
+          "capabilities",
+          "receipts"
+        ]
+      },
+      "LibraryReceipt": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "operation": {
+            "type": "string",
+            "maxLength": 64
+          },
+          "createdAt": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "revision": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 9007199254740991
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "operation",
+          "createdAt",
+          "revision"
+        ]
+      },
+      "LibraryCapability": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 64
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 300
+          },
+          "mutating": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "name",
+          "description",
+          "mutating"
+        ]
+      },
+      "LibraryCapabilities": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "actorId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "capabilities": {
+            "type": "array",
+            "maxItems": 16,
+            "items": {
+              "$ref": "#/components/schemas/LibraryCapability"
+            }
+          }
+        },
+        "required": [
+          "actorId",
+          "capabilities"
+        ]
+      },
+      "Error": {
+        "type": "object",
+        "required": [
+          "error",
+          "correlationId"
+        ],
+        "properties": {
+          "error": {
+            "type": "object",
+            "required": [
+              "code",
+              "retryable"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "enum": [
+                  "MALFORMED_REQUEST",
+                  "INCOMPATIBLE_PROTOCOL",
+                  "INVALID_SIGNATURE",
+                  "FINGERPRINT_MISMATCH",
+                  "UNCONFIRMED_HOST",
+                  "EXPIRED_INVITATION",
+                  "STALE_ROOM_EPOCH",
+                  "REPLAYED_NONCE",
+                  "REPLAY_CHECK_DEFERRED",
+                  "PROTOCOL_MISMATCH",
+                  "UNSUPPORTED_CRYPTO",
+                  "UNSUPPORTED_NETWORK",
+                  "RENDEZVOUS_UNAVAILABLE",
+                  "RENDEZVOUS_DEFERRED",
+                  "DIRECT_TIMEOUT",
+                  "RELAY_UNAVAILABLE",
+                  "RELAY_QUOTA_EXCEEDED",
+                  "FAILED_NO_RELAY",
+                  "PATH_LOST",
+                  "REJECTED_BACKPRESSURE",
+                  "DROPPED_UNRELIABLE",
+                  "RELIABLE_GAP",
+                  "REJECTED_REORDER_BUFFER",
+                  "REPLAY_BUDGET_EXCEEDED",
+                  "INVITATION_TOO_LARGE",
+                  "TICKET_HASH_MISMATCH",
+                  "RENDEZVOUS_KEY_MISMATCH",
+                  "CANCELLED",
+                  "CLOSED",
+                  "INVALID_COLLECTOR",
+                  "PAIRING_NOT_READY",
+                  "PAIRING_DENIED",
+                  "PAIRING_EXPIRED",
+                  "PAIRING_CANCELLED",
+                  "PAIRING_CONSUMED",
+                  "INVALID_SESSION",
+                  "INVALID_PROVIDER_CREDENTIAL",
+                  "ACCESS_EXPIRED",
+                  "SESSION_REVOKED",
+                  "REFRESH_REPLAY",
+                  "THROTTLED",
+                  "NOT_FOUND",
+                  "CONFLICT",
+                  "SERVICE_UNAVAILABLE",
+                  "INVALID_INPUT",
+                  "UNSUPPORTED_CAPSULE",
+                  "RESOURCE_LIMIT",
+                  "PROVIDER_LOST",
+                  "INVALID_OUTPUT",
+                  "POLICY_DENIED",
+                  "EXPIRED",
+                  "ARTIFACT_REVOKED",
+                  "INTERNAL_FAILURE",
+                  "STALE_ATTEMPT",
+                  "RESULT_CONFLICT"
+                ]
+              },
+              "retryable": {
+                "type": "boolean"
+              },
+              "retryAfterSeconds": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 300
+              }
+            },
+            "additionalProperties": false
+          },
+          "correlationId": {
+            "type": "string",
+            "pattern": "^corr_[A-Za-z0-9_-]{16,128}$"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Account": {
+        "type": "object",
+        "required": [
+          "id",
+          "displayName",
+          "connectivity"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "displayName": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "avatarRef": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 512
+          },
+          "connectivity": {
+            "type": "string",
+            "enum": [
+              "verified",
+              "cached"
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "SessionIssued": {
+        "type": "object",
+        "required": [
+          "accessToken",
+          "refreshToken",
+          "accessExpiresAt",
+          "refreshExpiresAt",
+          "account",
+          "sessionId"
+        ],
+        "properties": {
+          "sessionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "accessToken": {
+            "type": "string",
+            "minLength": 16
+          },
+          "refreshToken": {
+            "type": "string",
+            "minLength": 16
+          },
+          "accessExpiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "refreshExpiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "account": {
+            "$ref": "#/components/schemas/Account"
+          }
+        },
+        "additionalProperties": false
+      },
+      "RefreshRequest": {
+        "type": "object",
+        "required": [
+          "refreshToken",
+          "rotationId"
+        ],
+        "properties": {
+          "refreshToken": {
+            "type": "string",
+            "minLength": 16
+          },
+          "rotationId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "additionalProperties": false
+      },
+      "PairingStatus": {
+        "type": "object",
+        "required": [
+          "pairingId",
+          "status",
+          "expiresAt",
+          "pollAfterSeconds"
+        ],
+        "properties": {
+          "pairingId": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "authorized",
+              "denied",
+              "expired",
+              "cancelled",
+              "consumed"
+            ]
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "pollAfterSeconds": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 30
+          },
+          "account": {
+            "$ref": "#/components/schemas/Account"
+          }
+        },
+        "additionalProperties": false
+      },
+      "PairingCreated": {
+        "type": "object",
+        "required": [
+          "pairingId",
+          "browserUrl",
+          "collector",
+          "collectorExpiresAt",
+          "verificationCode",
+          "expiresAt",
+          "pollAfterSeconds"
+        ],
+        "properties": {
+          "pairingId": {
+            "type": "string",
+            "pattern": "^hp_"
+          },
+          "browserUrl": {
+            "type": "string",
+            "format": "uri"
+          },
+          "collector": {
+            "type": "string",
+            "description": "Returned once; send as X-Hubdustry-Collector and never include in browserUrl."
+          },
+          "collectorExpiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "verificationCode": {
+            "type": "string",
+            "pattern": "^[A-Z0-9]{6}$"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "pollAfterSeconds": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 30
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "responses": {
+      "Revoked": {
+        "description": "Session revoked",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "InvalidSession": {
+        "description": "Invalid session",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "ExpiredAccess": {
+        "description": "Access expired",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "Throttled": {
+        "description": "Rate limited",
+        "headers": {
+          "Retry-After": {
+            "$ref": "#/components/headers/RetryAfter"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "RefreshReplay": {
+        "description": "Refresh replay detected",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "Malformed": {
+        "description": "Malformed request",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "Denied": {
+        "description": "Authorization denied",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "Expired": {
+        "description": "Pairing expired",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "NotReady": {
+        "description": "Pairing not ready",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "Not found",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "InvalidCollector": {
+        "description": "Collector invalid",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "Conflict": {
+        "description": "Conflict",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "Incompatible": {
+        "description": "Unsupported protocol",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      }
+    },
+    "headers": {
+      "RetryAfter": {
+        "description": "Seconds until the next recommended poll/request.",
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 300
+        }
+      }
+    },
+    "examples": {
+      "SessionIssued": {
+        "value": {
+          "sessionId": "550e8400-e29b-41d4-a716-446655440000",
+          "accessToken": "ha_example_access_token",
+          "refreshToken": "hr_example_refresh_token",
+          "accessExpiresAt": "2026-08-26T12:15:00Z",
+          "refreshExpiresAt": "2026-09-25T12:00:00Z",
+          "account": {
+            "id": "6ba7b810-9dad-41d1-80b4-00c04fd430c8",
+            "displayName": "Hubdustry player",
+            "avatarRef": null,
+            "connectivity": "verified"
+          }
+        }
+      },
+      "PairingAuthorized": {
+        "value": {
+          "pairingId": "hp_01HZX7XJ8Y7J5K4Q9S2M8N6P3R4T6V8W",
+          "status": "authorized",
+          "expiresAt": "2026-08-26T12:05:00Z",
+          "pollAfterSeconds": 2
+        }
+      },
+      "PairingPending": {
+        "value": {
+          "pairingId": "hp_01HZX7XJ8Y7J5K4Q9S2M8N6P3R4T6V8W",
+          "status": "pending",
+          "expiresAt": "2026-08-26T12:05:00Z",
+          "pollAfterSeconds": 4
+        }
+      },
+      "PairingCreated": {
+        "value": {
+          "pairingId": "hp_01HZX7XJ8Y7J5K4Q9S2M8N6P3R4T6V8W",
+          "browserUrl": "https://api.hubdustry.com/auth/pair/hp_01HZX7XJ8Y7J5K4Q9S2M8N6P3R4T6V8W",
+          "collector": "hc_example_collector_never_use_in_browser",
+          "collectorExpiresAt": "2026-08-26T12:05:00Z",
+          "verificationCode": "7KQ2M9",
+          "expiresAt": "2026-08-26T12:05:00Z",
+          "pollAfterSeconds": 3
+        }
+      }
+    }
+  }
+}
