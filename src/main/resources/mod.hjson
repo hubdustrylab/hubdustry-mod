@@ -2,7 +2,7 @@ name: hubdustry
 displayName: Hubdustry
 author: Hubdustry Community
 description: A source-available community content library for Mindustry.
-version: 0.2.0
+version: 0.2.1
 minGameVersion: 160.2
 repo: hubdustrylab/hubdustry-mod
 hideBrowser: true

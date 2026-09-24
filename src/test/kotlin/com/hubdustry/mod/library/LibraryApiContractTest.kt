@@ -62,7 +62,7 @@ class LibraryApiContractTest {
             val latch = CountDownLatch(1); var page: LibraryPage? = null
             LibraryApi("http://127.0.0.1:${server.address.port}", executor).list(null, LibraryQuery(kind = ContentKind.MAP)) { response -> page = response.value; latch.countDown() }
             latch.await(); val parsed = assertNotNull(page).items.single()
-            assertEquals("1", protocol); assertEquals("0.2.0", mod); assertEquals("160.2", game); assertEquals("desktop", platform)
+            assertEquals("1", protocol); assertEquals("0.2.1", mod); assertEquals("160.2", game); assertEquals("desktop", platform)
             assertEquals(true, correlation.startsWith("corr_"))
             assertEquals("kind=MAP&sort=recommended&offset=0&limit=24", query)
             assertEquals(LibraryState.HIDDEN, parsed.state); assertEquals("uploader", parsed.uploaderId); assertEquals("owner", parsed.ownerId)

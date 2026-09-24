@@ -123,7 +123,7 @@ class AccountClient(private val origin: String = "https://api.hubdustry.com", pr
             requestMethod = method; connectTimeout = 10_000; readTimeout = 20_000
             instanceFollowRedirects = false
             setRequestProperty("Accept", "application/json")
-            setRequestProperty("X-Hubdustry-Protocol", "1"); setRequestProperty("X-Hubdustry-Mod-Version", "0.2.0"); setRequestProperty("X-Hubdustry-Game-Version", "160.2"); setRequestProperty("X-Hubdustry-Platform", platform); setRequestProperty("X-Correlation-Id", "corr_${UUID.randomUUID().toString().replace("-", "")}")
+            setRequestProperty("X-Hubdustry-Protocol", "1"); setRequestProperty("X-Hubdustry-Mod-Version", "0.2.1"); setRequestProperty("X-Hubdustry-Game-Version", "160.2"); setRequestProperty("X-Hubdustry-Platform", platform); setRequestProperty("X-Correlation-Id", "corr_${UUID.randomUUID().toString().replace("-", "")}")
             token?.let { setRequestProperty("Authorization", "Bearer $it") }
             headers.forEach { (k, v) -> setRequestProperty(k, v) }
             if (body != null) { doOutput = true; setRequestProperty("Content-Type", "application/json"); outputStream.use { it.write(body) } }

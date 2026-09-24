@@ -8,7 +8,7 @@ Download `hubdustry-mod.jar`, `release-manifest.json` and `release-manifest.sig`
 from the same release into a folder, then use Node.js 24:
 
 ```sh
-node verify-release.mjs --bundle path/to/downloads --release 0.2.0
+node verify-release.mjs --bundle path/to/downloads --release 0.2.1
 ```
 
 The expected publisher key fingerprint is:

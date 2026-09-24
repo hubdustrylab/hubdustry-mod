@@ -3,7 +3,7 @@ plugins {
 }
 
 group = 'com.hubdustry'
-version = '0.2.0'
+version = '0.2.1'
 dependencyLocking { lockAllConfigurations() }
 
 // Compile with the installed JDK while emitting JVM 17-compatible bytecode.

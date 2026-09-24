@@ -127,7 +127,7 @@ class LibraryApi(
             requestMethod = method; connectTimeout = 10_000; readTimeout = 20_000
             setRequestProperty("Accept", "application/json")
             setRequestProperty("X-Hubdustry-Protocol", "1")
-            setRequestProperty("X-Hubdustry-Mod-Version", "0.2.0")
+            setRequestProperty("X-Hubdustry-Mod-Version", "0.2.1")
             setRequestProperty("X-Hubdustry-Game-Version", "160.2")
             setRequestProperty("X-Hubdustry-Platform", if (System.getProperty("java.runtime.name", "").contains("Android", true)) "android" else "desktop")
             setRequestProperty("X-Correlation-Id", "corr_${UUID.randomUUID()}")
