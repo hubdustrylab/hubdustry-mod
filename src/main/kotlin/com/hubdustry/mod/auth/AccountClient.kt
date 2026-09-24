@@ -13,7 +13,7 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
 
-data class AccountSession(val accessToken: String, val refreshToken: String, val sessionId: String, val displayName: String?)
+data class AccountSession(val accessToken: String, val refreshToken: String, val sessionId: String, val displayName: String?, val avatarRef: String? = null)
 data class PairingCreated(val pairingId: String, val browserUrl: String, val collector: String, val pollAfterSeconds: Int)
 class AccountRequestHandle internal constructor(private val cancelled: AtomicBoolean) {
     @Volatile private var future: Future<*>? = null
@@ -70,7 +70,9 @@ class AccountClient(private val origin: String = "https://api.hubdustry.com", pr
                 } while (status == "pending")
                 require(status == "authorized") { "pairing_$status" }
                 val j = Jval.read(request("POST", "/v1/auth/pairings/${pairing.pairingId}/collect", null, null, mapOf("X-Hubdustry-Collector" to pairing.collector), handle))
-                AccountSession(j.getString("accessToken"), j.getString("refreshToken"), j.getString("sessionId"), if (j.has("account")) j.get("account").getString("displayName") else null).also { commit(it, token, handle) }
+                val identity = if (j.has("account")) j.get("account") else null
+                val avatar = identity?.get("avatarRef")?.takeUnless { it.isNull }?.asString()
+                AccountSession(j.getString("accessToken"), j.getString("refreshToken"), j.getString("sessionId"), identity?.getString("displayName"), avatar).also { commit(it, token, handle) }
             }.onSuccess { value -> if (!cancelled.get() && token == epoch.get()) dispatchIf(handle, token) { done(Result.success(value)) } }
                 .onFailure { error -> if (!cancelled.get() && token == epoch.get()) dispatchIf(handle, token) { done(Result.failure(error)) } }
             active.remove(handle)
@@ -90,7 +92,7 @@ class AccountClient(private val origin: String = "https://api.hubdustry.com", pr
             runCatching {
                 val body = Jval.newObject().put("refreshToken", retry?.third ?: current.refreshToken).put("rotationId", rotationId).toString().toByteArray()
                 val j = Jval.read(request("POST", "/v1/auth/sessions/refresh", null, body, emptyMap(), handle))
-                AccountSession(j.getString("accessToken"), j.getString("refreshToken"), j.getString("sessionId"), current.displayName).also { commit(it, token, handle) }
+                AccountSession(j.getString("accessToken"), j.getString("refreshToken"), j.getString("sessionId"), current.displayName, current.avatarRef).also { commit(it, token, handle) }
             }.onSuccess { value -> pendingRefresh = null; if (!cancelled.get() && token == epoch.get()) dispatchIf(handle, token) { done(Result.success(value)) } }
                 .onFailure { error -> if (!cancelled.get() && token == epoch.get()) dispatchIf(handle, token) { done(Result.failure(error)) } }
             refreshBusy.set(false); active.remove(handle)

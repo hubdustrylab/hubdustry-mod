@@ -1,6 +1,7 @@
 package com.hubdustry.mod.library
 
 import arc.Core
+import arc.Events
 import arc.graphics.Texture
 import arc.graphics.PixmapIO
 import arc.graphics.Pixmaps
@@ -15,6 +16,7 @@ import arc.scene.ui.Image
 import com.hubdustry.mod.auth.AccountClient
 import mindustry.Vars
 import mindustry.game.Schematics
+import mindustry.game.EventType.DisposeEvent
 import mindustry.gen.Icon
 import mindustry.gen.Tex
 import mindustry.ui.Styles
@@ -30,10 +32,17 @@ class LibraryBrowser {
     private val api = LibraryApi(executor = executor)
     private val account = AccountClient(executor = executor)
     private val views = mutableMapOf<ContentKind, LibraryDialog>()
+    private var menuEntry: MenuAccountEntry? = null
 
     fun install() {
         if (Vars.ui == null) return
-        Vars.ui.settings.addCategory("Hubdustry", Icon.book) { table ->
+        if (menuEntry != null) return
+        val icon = Vars.mods.getMod("hubdustry")?.iconTexture
+        val logo = if (icon == null) Icon.players else TextureRegionDrawable(arc.graphics.g2d.TextureRegion(icon))
+        menuEntry = MenuAccountEntry({ account.session }, executor, logo,
+            { dialog().show() }, { dialog().accountDialog() })
+        Events.on(DisposeEvent::class.java) { menuEntry?.close() }
+        Vars.ui.settings.addCategory("Hubdustry", logo) { table ->
             table.button("@hubdustry.library.schematics", Icon.book) { dialog(ContentKind.SCHEMATIC).show() }.size(280f, 54f)
             table.row()
             table.button("@hubdustry.library.maps", Icon.map) { dialog(ContentKind.MAP).show() }.size(280f, 54f)
@@ -391,7 +400,7 @@ class LibraryBrowser {
             }
         }
 
-        private fun accountDialog() {
+        fun accountDialog() {
             val accountView = BaseDialog("@hubdustry.account")
             accountView.name = "library.account-panel"
             accountView.addCloseButton()
@@ -400,8 +409,8 @@ class LibraryBrowser {
             if (account.session == null) {
                 accountView.cont.button("@hubdustry.account.sign-in") { accountView.hide(); accountButton() }.row()
             } else {
-                accountView.cont.button("@hubdustry.library.mine", Icon.book) { accountView.hide(); query = query.copy(ownerMe = true, state = null, offset = 0); load() }.row()
-                accountView.cont.button("@hubdustry.library.upload", Icon.upload) { accountView.hide(); upload() }.row()
+                accountView.cont.button("@hubdustry.library.mine", Icon.book) { accountView.hide(); query = query.copy(ownerMe = true, state = null, offset = 0); if (!isShown) show() else load() }.row()
+                accountView.cont.button("@hubdustry.library.upload", Icon.upload) { accountView.hide(); if (!isShown) show(); upload() }.row()
                 accountView.cont.button("@hubdustry.account.refresh", Icon.refresh) { accountView.hide(); accountButton() }.row()
                 accountView.cont.button("@hubdustry.account.logout") { account.logout(); accountView.hide(); query = query.copy(ownerMe = false, state = null, offset = 0); load() }.row()
             }
@@ -499,8 +508,11 @@ class LibraryBrowser {
             }
             status.setText("@hubdustry.account.waiting")
             account.pair { result ->
-                result.onSuccess { pairing -> account.collect(pairing) { collected -> Core.app.post { status.setText(if (collected.isSuccess) "@hubdustry.account.signed-in" else "@hubdustry.account.failed"); load() } } }
-                    .onFailure { Core.app.post { status.setText("@hubdustry.account.failed") } }
+                result.onSuccess { pairing -> account.collect(pairing) { collected -> Core.app.post {
+                    val message = if (collected.isSuccess) "@hubdustry.account.signed-in" else "@hubdustry.account.failed"
+                    status.setText(message); if (!isShown) Vars.ui.showInfo(message); load()
+                } } }
+                    .onFailure { Core.app.post { status.setText("@hubdustry.account.failed"); if (!isShown) Vars.ui.showInfo("@hubdustry.account.failed") } }
             }
         }
     }

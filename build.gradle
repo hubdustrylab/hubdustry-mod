@@ -34,6 +34,7 @@ jar {
     preserveFileTimestamps = false
     reproducibleFileOrder = true
     manifest { attributes('Implementation-Version': project.version) }
+    from('icon.png')
     from(['SOURCE-AVAILABLE-LICENSE.md', 'NOTICES.md']) { into 'META-INF' }
     from(configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }) {
         exclude 'META-INF/*.SF', 'META-INF/*.RSA', 'META-INF/*.DSA', 'META-INF/versions/**', 'module-info.class'
@@ -44,6 +45,7 @@ tasks.register('runtimeJarSmoke') {
     dependsOn tasks.named('jar')
     doLast {
         def archive = zipTree(tasks.named('jar').get().archiveFile.get().asFile)
+        if (archive.matching { include 'icon.png' }.isEmpty()) throw new GradleException('mod JAR is missing the Hubdustry icon')
         if (archive.matching { include 'kotlin/jvm/internal/Intrinsics.class' }.isEmpty()) throw new GradleException('fat JAR is missing Kotlin stdlib')
         if (!archive.matching { include 'mindustry/**'; include 'arc/**' }.isEmpty()) throw new GradleException('fat JAR must not bundle Mindustry or Arc')
         // Use only the packaged application and compile-only game API, without
