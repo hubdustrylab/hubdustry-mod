@@ -46,7 +46,7 @@ class AccountClient(private val origin: String = "https://api.hubdustry.com", pr
                 val browser = URL(j.getString("browserUrl")); val expected = URL(origin.trimEnd('/') + "/auth/pair/")
                 val browserPort = if (browser.port == -1) browser.defaultPort else browser.port
                 val expectedPort = if (expected.port == -1) expected.defaultPort else expected.port
-                require(browser.userInfo == null && browser.query == null && browser.ref == null && browser.protocol == expected.protocol && browser.host == expected.host && browserPort == expectedPort && browser.path == "/auth/pair/$pairingId") { "invalid_pairing_url" }
+                require(browser.userInfo == null && browser.query == null && browser.ref == null && browser.protocol == expected.protocol && browser.host == expected.host && browserPort == expectedPort && browser.path in setOf("/auth/pair/$pairingId", "/auth/pair/$pairingId/discord")) { "invalid_pairing_url" }
                 PairingCreated(pairingId, browser.toString(), j.getString("collector"), j.getInt("pollAfterSeconds", 2))
             }.onSuccess { created -> if (!cancelled.get() && token == epoch.get()) dispatchIf(handle, token) { Core.app?.openURI(created.browserUrl); done(Result.success(created)) } }
                 .onFailure { error -> if (!cancelled.get() && token == epoch.get()) dispatchIf(handle, token) { done(Result.failure(error)) } }
