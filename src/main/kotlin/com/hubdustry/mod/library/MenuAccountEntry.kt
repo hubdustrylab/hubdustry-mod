@@ -35,23 +35,37 @@ internal class MenuAccountEntry(
 ) : AutoCloseable {
     private val root = Table()
     private val avatar = object : Image(logo) {
-        init { setScaling(Scaling.fit) }
+        init {
+            setScaling(Scaling.fit)
+            color.set(Color.white).lerp(LibraryTheme.accent, .6f)
+        }
         override fun draw() {
+            color.a = if (browserButton.isOver) .96f else .82f
             super.draw()
             val opacity = parentAlpha * color.a * if (browserButton.isOver) 1f else .65f
             val gap = Scl.scl(5f)
             corners(x - gap, y - gap, x + width + gap, y + height + gap, opacity)
-            Draw.color(LibraryTheme.accent, opacity * .08f); Lines.stroke(Scl.scl(1f))
+            Draw.color(LibraryTheme.accent, opacity * .16f); Lines.stroke(Scl.scl(1f))
             for (i in 1..5) Lines.line(x, y + height * i / 6f, x + width, y + height * i / 6f)
+            // A short projection stem visually connects the avatar to the name.
+            Lines.line(x + width / 2f, y - gap, x + width / 2f, y - gap - Scl.scl(7f))
             Draw.reset()
         }
     }
     private val browserButton = Button(Styles.emptyi)
-    private val accountButton = TextButton("", LibraryTheme.button().apply {
-        up = null; checked = null; checkedOver = null; disabled = null
-        over = LibraryTheme.fill(LibraryTheme.hover); down = over
+    private val accountButton = object : TextButton("", LibraryTheme.button().apply {
+        up = null; down = null; over = null; checked = null; checkedOver = null; disabled = null
         fontColor = LibraryTheme.accent; overFontColor = Color.white; downFontColor = Color.white
-    })
+    }) {
+        override fun draw() {
+            super.draw()
+            val opacity = parentAlpha * color.a * if (isOver || isPressed) 1f else .55f
+            corners(x, y, x + width, y + height, opacity)
+            Draw.color(LibraryTheme.accent, opacity * .25f); Lines.stroke(Scl.scl(1f))
+            Lines.line(x + Scl.scl(14f), y, x + width - Scl.scl(14f), y)
+            Draw.reset()
+        }
+    }
     private var label = ""
     private var avatarKey: String? = null
     private var texture: Texture? = null
@@ -65,20 +79,17 @@ internal class MenuAccountEntry(
         root.setFillParent(true); root.touchable = Touchable.childrenOnly
         root.bottom()
         root.table { content ->
-            content.background(ArchiveUi.panel(ArchiveUi.black, LibraryTheme.hover, cut = true))
-            content.margin(8f)
             browserButton.name = "hubdustry.menu.open"
             browserButton.margin(0f)
             avatar.name = "hubdustry.menu.avatar"
-            browserButton.add(avatar).size(60f).pad(8f)
+            browserButton.add(avatar).size(64f).pad(8f)
             browserButton.clicked { if (!closed) openBrowser() }
-            content.add(browserButton).width(192f).height(82f).tooltip("Hubdustry").row()
-            content.image(LibraryTheme.fill(LibraryTheme.hover)).width(192f).height(1f).row()
+            content.add(browserButton).width(192f).height(84f).tooltip("Hubdustry").row()
             accountButton.name = "hubdustry.menu.login"
             accountButton.label.setEllipsis(true)
             accountButton.clicked { if (!closed) openAccount() }
-            content.add(accountButton).width(192f).height(38f)
-        }.padBottom(18f)
+            content.add(accountButton).minWidth(144f).maxWidth(192f).height(36f).padTop(2f)
+        }.padBottom(20f)
         root.update { updateIdentity() }
         // Menu visibility is owned by the game; dialogs stay above this entry.
         Vars.ui.menuGroup.addChild(root)
@@ -163,11 +174,14 @@ internal class MenuAccountEntry(
 
         private fun corners(left: Float, bottom: Float, right: Float, top: Float, opacity: Float) {
             val corner = Scl.scl(10f)
-            Draw.color(LibraryTheme.accent, opacity); Lines.stroke(Scl.scl(1.3f))
-            Lines.line(left, top - corner, left, top); Lines.line(left, top, left + corner, top)
-            Lines.line(right - corner, top, right, top); Lines.line(right, top, right, top - corner)
-            Lines.line(left, bottom + corner, left, bottom); Lines.line(left, bottom, left + corner, bottom)
-            Lines.line(right - corner, bottom, right, bottom); Lines.line(right, bottom, right, bottom + corner)
+            for (pass in 0..1) {
+                Draw.color(LibraryTheme.accent, opacity * if (pass == 0) .12f else 1f)
+                Lines.stroke(Scl.scl(if (pass == 0) 4f else 1.1f))
+                Lines.line(left, top - corner, left, top); Lines.line(left, top, left + corner, top)
+                Lines.line(right - corner, top, right, top); Lines.line(right, top, right, top - corner)
+                Lines.line(left, bottom + corner, left, bottom); Lines.line(left, bottom, left + corner, bottom)
+                Lines.line(right - corner, bottom, right, bottom); Lines.line(right, bottom, right, bottom + corner)
+            }
             Draw.reset()
         }
     }
