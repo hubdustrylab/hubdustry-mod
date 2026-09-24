@@ -33,6 +33,7 @@ class LibraryBrowser {
     private val account = AccountClient(executor = executor)
     private val views = mutableMapOf<ContentKind, LibraryDialog>()
     private var menuEntry: MenuAccountEntry? = null
+    private var sidebarExpanded = true
 
     fun install() {
         if (Vars.ui == null) return
@@ -70,9 +71,11 @@ class LibraryBrowser {
         private val browserTable = Table()
         private val listing = ScrollPane(browserTable)
         private val search = TextField("")
+        private var navigationDrawer: BaseDialog? = null
 
         private fun wide() = Core.graphics.width / Scl.scl(1f) >= 900f
-        private fun contentWidth() = (Core.graphics.width / Scl.scl(1f) - if (wide()) 294f else 32f).coerceIn(240f, 1680f)
+        private fun sidebarWidth() = if (sidebarExpanded) 232f else 72f
+        private fun contentWidth() = (Core.graphics.width / Scl.scl(1f) - if (wide()) sidebarWidth() + 65f else 32f).coerceIn(240f, 1680f)
         private fun caption(key: String) = Core.bundle.get("hubdustry.archive.$key")
 
         init {
@@ -100,13 +103,14 @@ class LibraryBrowser {
                 Core.app.post { if (isShown && token == generationAtOpen.get()) load() }
             }
             hidden {
+                navigationDrawer?.hide(); navigationDrawer = null
                 request?.cancel(); request = null
                 catalogRequest?.cancel(); catalogRequest = null
                 clearImages()
                 sourceRequest?.cancel(); sourceRequest = null
                 generationAtOpen.set(generation.incrementAndGet()); detailGeneration.incrementAndGet()
             }
-            onResize { layoutChrome(); rebuild() }
+            onResize { reflowChrome() }
         }
 
         private fun navigate(next: ContentKind) {
@@ -121,41 +125,60 @@ class LibraryBrowser {
             }
         }
 
+        private fun reflowChrome() {
+            val scroll = listing.scrollY
+            layoutChrome(); rebuild()
+            listing.validate(); listing.setScrollY(scroll); listing.updateVisualScroll()
+        }
+
+        private fun openNavigation() {
+            if (navigationDrawer?.isShown == true) return
+            val drawer = BaseDialog("")
+            navigationDrawer = drawer
+            val openedWidth = Core.graphics.width
+            val openedHeight = Core.graphics.height
+            drawer.name = "library.sidebar.drawer"
+            drawer.clearChildren()
+            drawer.background(ArchiveUi.panel(LibraryTheme.canvas, LibraryTheme.line, technical = true))
+            drawer.closeOnBack()
+            drawer.hidden {
+                if (isShown && (openedWidth != Core.graphics.width || openedHeight != Core.graphics.height)) reflowChrome()
+            }
+            fun layoutDrawer() {
+                drawer.clearChildren()
+                drawer.add(LibrarySidebar(kind, expanded = true, overlay = true,
+                    onToggle = { drawer.hide() },
+                    onNavigate = { next -> drawer.hide(); navigate(next) },
+                    onAccount = { drawer.hide(); accountDialog() },
+                    onReturn = { drawer.hide(); hide() }))
+                    .width((Core.graphics.width / Scl.scl(1f) - 32f).coerceIn(240f, 360f)).growY().pad(16f)
+            }
+            layoutDrawer()
+            drawer.resized { layoutDrawer() }
+            drawer.show()
+        }
+
         private fun layoutChrome() {
             clearChildren()
             val frame = Table()
             add(frame).grow()
             if (wide()) {
-                frame.table { rail ->
-                    rail.background(LibraryTheme.fill(ArchiveUi.bone)).top().left().margin(20f)
-                    rail.add(ArchiveUi.text("HUB", 52f, ArchiveUi.black, true)).left().row()
-                    rail.add(ArchiveUi.text("DUSTRY", 35f, ArchiveUi.black, true)).left().padTop(-12f).row()
-                    rail.add(ArchiveUi.text("COMMUNITY / ARCHIVE", 11f, ArchiveUi.black)).left().padTop(12f).padBottom(32f).row()
-                    rail.image(ArchiveUi.stripes()).height(8f).growX().padBottom(32f).row()
-                    for (entry in ContentKind.values()) {
-                        val label = (if (entry == ContentKind.SCHEMATIC) "01   " else "02   ") + caption(if (entry == ContentKind.SCHEMATIC) "schematics" else "maps")
-                        rail.button(label, ArchiveUi.navigation(entry == kind)) { navigate(entry) }.growX().height(58f).padBottom(6f).get().name = "library.navigate.${entry.name}"
-                        rail.row()
-                    }
-                    rail.add().growY().row()
-                    rail.add(ArchiveUi.text("H / 01", 42f, Color.valueOf("a4a69e"), true)).left().padBottom(24f).row()
-                    rail.button("@hubdustry.account", ArchiveUi.navigation(false)) { accountDialog() }.growX().height(48f).get().name = "library.account"
-                    rail.row()
-                    rail.button("@hubdustry.back", ArchiveUi.navigation(false)) { hide() }.growX().height(48f).padTop(6f)
-                }.width(210f).growY()
-                frame.image(LibraryTheme.fill(LibraryTheme.accent)).width(6f).growY()
+                frame.add(LibrarySidebar(kind, sidebarExpanded, overlay = false,
+                    onToggle = { sidebarExpanded = !sidebarExpanded; reflowChrome() },
+                    onNavigate = { navigate(it) }, onAccount = { accountDialog() }, onReturn = { hide() }))
+                    .width(sidebarWidth()).growY()
+                frame.image(LibraryTheme.fill(LibraryTheme.line)).width(1f).growY()
             }
             frame.table { workspace ->
                 workspace.top().margin(if (wide()) 32f else 12f)
                 val available = contentWidth()
                 workspace.table { masthead ->
                     masthead.left()
+                    if (!wide()) masthead.button(Icon.menu, LibraryTheme.icon()) { openNavigation() }
+                        .size(40f).padRight(10f).tooltip("@hubdustry.sidebar.expand").get().name = "library.sidebar.open"
                     val trail = if (wide()) caption("community") else if (kind == ContentKind.MAP) "02" else "01"
                     masthead.add(ArchiveUi.text("HUBDUSTRY / " + trail, 12f, LibraryTheme.accent)).left().growX().minWidth(0f).ellipsis(true)
                     if (!wide()) {
-                        val destination = if (kind == ContentKind.MAP) ContentKind.SCHEMATIC else ContentKind.MAP
-                        masthead.button(ArchiveUi.icon(if (kind == ContentKind.MAP) "schematic" else "map"), LibraryTheme.icon()) { navigate(destination) }.size(40f).get().name = "library.navigate.${destination.name}"
-                        masthead.button(ArchiveUi.icon("account"), LibraryTheme.icon()) { accountDialog() }.size(40f).get().name = "library.account"
                         masthead.button(ArchiveUi.icon("close"), LibraryTheme.icon()) { hide() }.size(40f)
                     }
                 }.width(available).growX().padBottom(8f).row()
