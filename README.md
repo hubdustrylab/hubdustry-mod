@@ -24,8 +24,12 @@ Android packaging additionally needs `ANDROID_SDK_ROOT` or `ANDROID_HOME`,
 build-tools 35.0.0 and android-35. D8 and Android API input hashes are checked
 before packaging. Android 8.0 (API 26) is the current minimum. Outputs are
 `build/dist/hubdustry-mod-desktop.jar` and `hubdustry-mod-android.jar`.
-The release candidate `hubdustry-mod-0.2.0.jar` combines JVM classes and Android
+The build output `hubdustry-mod-0.2.0.jar` combines JVM classes and Android
 DEX in one artifact for the game's built-in mod installer.
+
+Install [Hubdustry 0.2.0](https://github.com/hubdustrylab/hubdustry-mod/releases/tag/v0.2.0)
+using `hubdustry-mod.jar`. Platform-specific alternatives are included in
+`platform-alternatives.zip`; the standalone release JAR works on both platforms.
 
 The public artifact is built from this repository alone. It contains no
 updater, obfuscated classes, private service implementation or developer
@@ -42,10 +46,11 @@ Network failures leave ordinary Mindustry gameplay available. Authentication,
 authoring and moderation controls appear only when the backend projects the
 corresponding capability.
 
-This new generation is a development candidate. Full database integration,
-in-game acceptance against the activated backend and production activation are
-release gates; local fixture runs do not establish them. Earlier releases remain
-available while this candidate is validated.
+Version0.2.0 is available with the production library API. Its desktop browser,
+renderer backgrounds and schematic import were exercised in Mindustry160.2
+against the activated backend. Android packaging and earlier fixture checks
+remain separate evidence; there is no new Android production gameplay claim.
+The map browser is available, with an empty map catalog at launch.
 
 The [public API snapshot](docs/library-contract.json) contains the client-facing
 authentication and library schemas. Imported author credit is independent of

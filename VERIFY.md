@@ -23,6 +23,8 @@ Mod Browser does not run this separate verification step.
 Kotlin releases use manifest version2 and the same publisher key. Their platform
 alternatives are `hubdustry-mod-desktop.jar` and `hubdustry-mod-android.jar`; use
 `--variant desktop` or `--variant android` to verify the selected alternative.
+Extract these alternatives from `platform-alternatives.zip` into the same folder
+as the signed manifest and signature before running the verifier.
 The default remains the universal `hubdustry-mod.jar`. Version1 manifests and
 their earlier artifact names remain supported.
 
