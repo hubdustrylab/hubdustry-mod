@@ -35,18 +35,13 @@ internal class MenuAccountEntry(
 ) : AutoCloseable {
     private val root = Table()
     private val avatar = object : Image(logo) {
-        init {
-            setScaling(Scaling.fit)
-            color.set(Color.white).lerp(LibraryTheme.accent, .6f)
-        }
+        init { setScaling(Scaling.fit) }
         override fun draw() {
-            color.a = if (browserButton.isOver) .96f else .82f
             super.draw()
             val opacity = parentAlpha * color.a * if (browserButton.isOver) 1f else .65f
             val gap = Scl.scl(5f)
             corners(x - gap, y - gap, x + width + gap, y + height + gap, opacity)
             Draw.color(LibraryTheme.accent, opacity * .16f); Lines.stroke(Scl.scl(1f))
-            for (i in 1..5) Lines.line(x, y + height * i / 6f, x + width, y + height * i / 6f)
             // A short projection stem visually connects the avatar to the name.
             Lines.line(x + width / 2f, y - gap, x + width / 2f, y - gap - Scl.scl(7f))
             Draw.reset()
